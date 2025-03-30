@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "244659699647",
+    "project_id": "fantadiv",
+    "storage_bucket": "fantadiv.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:244659699647:android:3ccc0576848630e0ef2b0a",
+        "android_client_info": {
+          "package_name": "com.example.fantadiv.fantadiv"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA6cKleRATqDMbD3kmnEYzChMuIf1pAMak"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
