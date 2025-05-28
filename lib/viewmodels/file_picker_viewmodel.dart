@@ -8,7 +8,6 @@ import '../db/firebase_util_storage.dart';
 import '../models/players.dart';
 
 class FilePickerViewModel extends ChangeNotifier {
-
   final FirebaseUtilStorage _storage = FirebaseUtilStorage();
   String? _filePath;
   bool _isLoading = false;
@@ -82,16 +81,21 @@ class FilePickerViewModel extends ChangeNotifier {
 
   Future<void> checker() async {
     isLoadingPlayers = true; // Mostra il caricamento
+    notifyListeners();
+
     if (await _storage.checkPlayers()) {
       _alreadyLoaded = true;
-      notifyListeners();
 
-      // Trasforma ogni documento in un oggetto Players e lo aggiunge alla lista
-      QuerySnapshot querySnapshot = await _storage.loadPlayers();
-      _playersStored = querySnapshot.docs
+      // Carica tutti gli snapshot da Firestore
+      List<QuerySnapshot<Object?>> snapshots = await _storage.loadPlayers();
+
+      // Unisce tutti i documenti e li trasforma in oggetti Players
+      _playersStored = snapshots
+          .expand((querySnapshot) => querySnapshot.docs)
           .map((doc) => Players.fromMap(doc.data() as Map<String, dynamic>))
           .toList();
     }
+
     isLoadingPlayers = false; // Nasconde il caricamento
     notifyListeners();
   }
