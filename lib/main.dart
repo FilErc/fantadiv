@@ -1,16 +1,26 @@
-import 'package:fantadiv/view/homepage.dart';
-import 'package:fantadiv/view/login_page.dart';
-import 'package:fantadiv/viewmodels/calendar_viewmodel.dart';
-import 'package:fantadiv/viewmodels/file_picker_viewmodel.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:provider/provider.dart';
 
+import 'view/homepage.dart';
+import 'view/login_page.dart';
+import 'viewmodels/calendar_viewmodel.dart';
+import 'viewmodels/file_picker_viewmodel.dart';
+import 'firebase_options.dart';
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp();
-  runApp(const MyApp());
+
+  if (kIsWeb) {
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.web,
+    );
+  } else {
+    await Firebase.initializeApp();
+  }
+
   runApp(
     MultiProvider(
       providers: [
@@ -33,13 +43,14 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
       ),
-      home: AuthWrapper(), // Verifica se l'utente è già autenticato
+      home: const AuthWrapper(),
     );
   }
 }
 
-// Widget che gestisce l'autenticazione
 class AuthWrapper extends StatelessWidget {
+  const AuthWrapper({super.key});
+
   @override
   Widget build(BuildContext context) {
     return StreamBuilder<User?>(
@@ -50,9 +61,9 @@ class AuthWrapper extends StatelessWidget {
         }
 
         if (snapshot.hasData) {
-          return const HomePage(); // Se l'utente è autenticato, vai alla HomePage
+          return const HomePage();
         } else {
-          return const LoginPage(); // Se non è autenticato, mostra la LoginPage
+          return const LoginPage();
         }
       },
     );
