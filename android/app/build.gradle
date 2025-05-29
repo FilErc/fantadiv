@@ -6,10 +6,12 @@ plugins {
     id "com.google.gms.google-services"
 }
 
+apply plugin: 'com.google.gms.google-services'
+
 android {
     namespace = "com.example.fantadiv.fantadiv"
-    compileSdk = flutter.compileSdkVersion
-    ndkVersion = flutter.ndkVersion
+    compileSdk 35
+    ndkVersion = '26.3.11579264'
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_1_8
@@ -36,6 +38,7 @@ android {
             signingConfig = signingConfigs.debug
         }
     }
+    buildToolsVersion '35.0.0'
 }
 
 flutter {
