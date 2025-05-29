@@ -5,7 +5,7 @@ class DefaultFirebaseOptions {
     apiKey: "AIzaSyD2OMttcjwaq4zVc52U4C4y3hKpr8yUmqY",
     authDomain: "fantadiv.firebaseapp.com",
     projectId: "fantadiv",
-    storageBucket: "fantadiv.firebasestorage.app",
+    storageBucket: "fantadiv.appspot.com",
     messagingSenderId: "244659699647",
     appId: "1:244659699647:web:de45d77f0af231a7ef2b0a",
     measurementId: "G-7Q3WSKR59B"
