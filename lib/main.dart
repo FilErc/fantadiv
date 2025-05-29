@@ -10,34 +10,33 @@ import 'viewmodels/calendar_viewmodel.dart';
 import 'viewmodels/file_picker_viewmodel.dart';
 import 'firebase_options.dart';
 
+import 'dart:developer'; // per usare log()
+
 late final String firebaseSource;
+
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  if (kIsWeb) {
-    print('🟡 Inizializzazione Firebase Web...');
-    firebaseSource = 'Firebase Web API';
-    await Firebase.initializeApp(
-      options: DefaultFirebaseOptions.web,
-    );
-  } else {
-    print('🟢 Inizializzazione Firebase Mobile...');
-    firebaseSource = 'Firebase Mobile API';
-    await Firebase.initializeApp();
+  try {
+    if (kIsWeb) {
+      firebaseSource = 'Firebase Web API';
+      log('🟡 Tentativo inizializzazione Firebase Web');
+      await Firebase.initializeApp(
+        options: DefaultFirebaseOptions.web,
+      );
+    } else {
+      firebaseSource = 'Firebase Mobile API';
+      log('🟢 Tentativo inizializzazione Firebase Mobile');
+      await Firebase.initializeApp();
+    }
+  } catch (e, stackTrace) {
+    firebaseSource = 'Errore Firebase Init';
+    log('🔥 Errore durante Firebase.initializeApp: $e', stackTrace: stackTrace);
   }
 
-  runApp(
-    MultiProvider(
-      providers: [
-        ChangeNotifierProvider(create: (_) => CalendarViewModel()),
-        ChangeNotifierProvider(create: (_) => FilePickerViewModel()),
-      ],
-      child: const MyApp(),
-    ),
-  );
+  runApp(MyApp());
 }
-
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
