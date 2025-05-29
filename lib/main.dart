@@ -16,11 +16,13 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   if (kIsWeb) {
+    print('🟡 Inizializzazione Firebase Web...');
     firebaseSource = 'Firebase Web API';
     await Firebase.initializeApp(
       options: DefaultFirebaseOptions.web,
     );
   } else {
+    print('🟢 Inizializzazione Firebase Mobile...');
     firebaseSource = 'Firebase Mobile API';
     await Firebase.initializeApp();
   }
@@ -35,6 +37,7 @@ void main() async {
     ),
   );
 }
+
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
