@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:provider/provider.dart';
+import 'dart:developer'; // per usare log()
 
 import 'view/homepage.dart';
 import 'view/login_page.dart';
@@ -10,32 +11,62 @@ import 'viewmodels/calendar_viewmodel.dart';
 import 'viewmodels/file_picker_viewmodel.dart';
 import 'firebase_options.dart';
 
-import 'dart:developer'; // per usare log()
-
 late final String firebaseSource;
 
-
 void main() async {
+  print('🚀 Inizio main()');
+  log('🚀 Inizio main()');
+
   WidgetsFlutterBinding.ensureInitialized();
+  print('✅ WidgetsFlutterBinding done');
+  log('✅ WidgetsFlutterBinding done');
 
   try {
     if (kIsWeb) {
+      print('🌐 Rilevato Web');
+      log('🌐 Rilevato Web');
+
       firebaseSource = 'Firebase Web API';
-      log('🟡 Tentativo inizializzazione Firebase Web');
+      print('🔄 Inizializzazione Firebase Web...');
+      log('🔄 Inizializzazione Firebase Web...');
+
       await Firebase.initializeApp(
         options: DefaultFirebaseOptions.web,
       );
+
+      print('✅ Firebase Web inizializzato con successo');
+      log('✅ Firebase Web inizializzato con successo');
     } else {
+      print('📱 Rilevato Mobile');
+      log('📱 Rilevato Mobile');
+
       firebaseSource = 'Firebase Mobile API';
-      log('🟢 Tentativo inizializzazione Firebase Mobile');
+      print('🔄 Inizializzazione Firebase Mobile...');
+      log('🔄 Inizializzazione Firebase Mobile...');
+
       await Firebase.initializeApp();
+
+      print('✅ Firebase Mobile inizializzato con successo');
+      log('✅ Firebase Mobile inizializzato con successo');
     }
   } catch (e, stackTrace) {
     firebaseSource = 'Errore Firebase Init';
-    log('🔥 Errore durante Firebase.initializeApp: $e', stackTrace: stackTrace);
+    print('❌ Errore durante Firebase.initializeApp: $e');
+    log('❌ Errore durante Firebase.initializeApp: $e', stackTrace: stackTrace);
   }
 
-  runApp(MyApp());
+  print('🏁 Chiamo runApp()');
+  log('🏁 Chiamo runApp()');
+
+  runApp(
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => CalendarViewModel()),
+        ChangeNotifierProvider(create: (_) => FilePickerViewModel()),
+      ],
+      child: const MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {
