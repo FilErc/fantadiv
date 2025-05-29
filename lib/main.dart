@@ -10,14 +10,18 @@ import 'viewmodels/calendar_viewmodel.dart';
 import 'viewmodels/file_picker_viewmodel.dart';
 import 'firebase_options.dart';
 
+late final String firebaseSource;
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   if (kIsWeb) {
+    firebaseSource = 'Firebase Web API';
     await Firebase.initializeApp(
       options: DefaultFirebaseOptions.web,
     );
   } else {
+    firebaseSource = 'Firebase Mobile API';
     await Firebase.initializeApp();
   }
 
@@ -43,7 +47,26 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
       ),
-      home: const AuthWrapper(),
+      home: Stack(
+        children: [
+          const AuthWrapper(),
+          Positioned(
+            bottom: 10,
+            right: 10,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+              decoration: BoxDecoration(
+                color: Colors.black.withOpacity(0.6),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Text(
+                firebaseSource,
+                style: const TextStyle(color: Colors.white, fontSize: 12),
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

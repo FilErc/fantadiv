@@ -2,7 +2,7 @@ import 'package:firebase_core/firebase_core.dart';
 
 class DefaultFirebaseOptions {
   static FirebaseOptions get web => const FirebaseOptions(
-    apiKey: "AIzaSyA6cKleRATqDMbD3kmnEYzChMuIf1pAMak",
+    apiKey: "AIzaSyD2OMttcjwaq4zVc52U4C4y3hKpr8yUmqY",
     authDomain: "fantadiv.firebaseapp.com",
     projectId: "fantadiv",
     storageBucket: "fantadiv.appspot.com",
