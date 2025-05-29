@@ -1,0 +1,10 @@
+{
+  "name": "fantadiv",
+  "short_name": "fantadiv",
+  "start_url": "/fantadiv/",
+  "display": "standalone",
+  "background_color": "#000000",
+  "theme_color": "#000000",
+  "orientation": "portrait-primary",
+  "icons": []
+}
