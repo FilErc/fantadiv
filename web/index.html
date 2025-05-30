@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <meta content="IE=Edge" http-equiv="X-UA-Compatible">
+    <meta name="description" content="Flutter Web App">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fantadiv</title>
+
+    <!-- ✅ Placeholder per base href -->
+    <base href="$FLUTTER_BASE_HREF">
+    <script src="flutter.js" defer></script>
+  </head>
+  <body>
+    <script>
+      window.addEventListener('load', function () {
+        flutter.loader.load({
+          serviceWorker: {
+            serviceWorkerVersion: '{{flutter_service_worker_version}}',
+          },
+        });
+      });
+    </script>
+  </body>
+</html>
