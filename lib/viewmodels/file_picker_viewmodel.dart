@@ -12,24 +12,22 @@ class FilePickerViewModel extends ChangeNotifier {
   String? _filePath;
   bool _isLoading = false;
   bool _alreadyLoaded = false;
-  List<Players> _playersStored = [];
-  bool isLoadingPlayers = false; // Stato per il caricamento
-  List<Players> get playersStored => _playersStored;
+  bool isLoadingPlayers = false;
+
+  final Map<String, List<Players>> _playersByPosition = {};
+  Map<String, List<Players>> get playersByPosition => _playersByPosition;
 
   String? get filePath => _filePath;
-
   bool get isLoading => _isLoading;
-
   bool get alreadyLoaded => _alreadyLoaded;
 
-
-  FilePickerViewModel(){
+  FilePickerViewModel() {
     checker();
   }
 
   Future<void> pickAndProcessFile() async {
     _isLoading = true;
-    notifyListeners(); // Notifica alla UI l'inizio del caricamento
+    notifyListeners();
 
     FilePickerResult? result = await FilePicker.platform.pickFiles(
       type: FileType.custom,
@@ -38,14 +36,14 @@ class FilePickerViewModel extends ChangeNotifier {
 
     if (result != null) {
       _filePath = result.files.single.path;
-
       if (_filePath != null) {
         await _readExcelFile(_filePath!);
+        _alreadyLoaded = true;
       }
     }
 
     _isLoading = false;
-    notifyListeners(); // Notifica alla UI la fine del caricamento
+    notifyListeners();
   }
 
   Future<void> _readExcelFile(String path) async {
@@ -58,20 +56,14 @@ class FilePickerViewModel extends ChangeNotifier {
         for (var row in excel.tables[table]!.rows) {
           List<String> rowData = [];
           for (var cell in row) {
-            if (cell != null) {
-              var value = cell.value.toString();
-              if (value.contains(":")) {
-                value = value
-                    .split(":")
-                    .last
-                    .trim();
-              }
-              rowData.add(value);
-            } else {
-              rowData.add("");
+            String value = cell?.value?.toString() ?? "";
+            if (value.contains(":")) {
+              value = value.split(":").last.trim();
             }
+            rowData.add(value);
           }
-          _storage.storePlayers(rowData);
+
+          await _storage.storePlayers(rowData);
         }
       }
     } catch (e) {
@@ -80,23 +72,26 @@ class FilePickerViewModel extends ChangeNotifier {
   }
 
   Future<void> checker() async {
-    isLoadingPlayers = true; // Mostra il caricamento
+    isLoadingPlayers = true;
     notifyListeners();
 
     if (await _storage.checkPlayers()) {
       _alreadyLoaded = true;
 
-      // Carica tutti gli snapshot da Firestore
       List<QuerySnapshot<Object?>> snapshots = await _storage.loadPlayers();
 
-      // Unisce tutti i documenti e li trasforma in oggetti Players
-      _playersStored = snapshots
-          .expand((querySnapshot) => querySnapshot.docs)
-          .map((doc) => Players.fromMap(doc.data() as Map<String, dynamic>))
-          .toList();
+      for (var snap in snapshots) {
+        for (var doc in snap.docs) {
+          final player = Players.fromMap(doc.data() as Map<String, dynamic>);
+          final pos = player.position;
+
+          _playersByPosition.putIfAbsent(pos, () => []);
+          _playersByPosition[pos]!.add(player);
+        }
+      }
     }
 
-    isLoadingPlayers = false; // Nasconde il caricamento
+    isLoadingPlayers = false;
     notifyListeners();
   }
 }
