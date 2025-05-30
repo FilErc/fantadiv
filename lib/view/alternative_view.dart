@@ -55,7 +55,7 @@ class _FilterController extends ChangeNotifier {
   void toggle(String pos) async {
     isUpdating = true;
     notifyListeners();
-    await Future.delayed(const Duration(milliseconds: 100)); // mostra loader
+    await Future.delayed(const Duration(milliseconds: 1000)); // mostra loader
 
     if (selectedPositions.contains(pos)) {
       selectedPositions.remove(pos);
