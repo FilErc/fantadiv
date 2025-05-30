@@ -13,33 +13,20 @@ import 'viewmodels/file_picker_viewmodel.dart';
 
 late final String firebaseSource;
 
-Future<void> main() async {
-  log('🚀 Inizio main()');
-  WidgetsFlutterBinding.ensureInitialized();
 
-  firebaseSource = kIsWeb ? 'Firebase Web API' : 'Firebase Mobile API';
-  log('🔄 Inizializzazione Firebase: $firebaseSource');
-
-  try {
-    await Firebase.initializeApp(
-      options: DefaultFirebaseOptions.currentPlatform,
-    );
-    log('✅ Firebase inizializzato');
-  } catch (e, stack) {
-    firebaseSource = 'Errore Firebase Init';
-    log('❌ Errore Firebase.initializeApp(): $e', stackTrace: stack);
-  }
-
-  runApp(
-    MultiProvider(
-      providers: [
-        ChangeNotifierProvider(create: (_) => CalendarViewModel()),
-        ChangeNotifierProvider(create: (_) => FilePickerViewModel()),
-      ],
-      child: const MyApp(),
+void main() {
+  runApp(const MaterialApp(
+    home: Scaffold(
+      body: Center(
+        child: Text(
+          "✅ Flutter Web funziona!",
+          style: TextStyle(fontSize: 24),
+        ),
+      ),
     ),
-  );
+  ));
 }
+
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
