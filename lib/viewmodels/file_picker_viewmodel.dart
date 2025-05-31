@@ -90,6 +90,9 @@ class FilePickerViewModel extends ChangeNotifier {
         }
       }
     }
+    else{
+      _alreadyLoaded = false;
+    }
 
     isLoadingPlayers = false;
     notifyListeners();

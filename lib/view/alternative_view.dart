@@ -95,10 +95,10 @@ class _PositionSelector extends StatelessWidget {
 
   String _getLabel(String code) {
     switch (code) {
-      case 'A': return 'Attaccanti';
-      case 'C': return 'Centrocampisti';
-      case 'D': return 'Difensori';
-      case 'P': return 'Portieri';
+      case 'A': return 'Att';
+      case 'C': return 'Cc';
+      case 'D': return 'Dif';
+      case 'P': return 'P';
       default: return code;
     }
   }
@@ -141,8 +141,12 @@ class _PositionedPlayerList extends StatelessWidget {
                   color: color.withOpacity(0.1),
                   elevation: 2,
                   child: ListTile(
-                    title: Text(p.name, style: TextStyle(color: color)),
-                    subtitle: Text(p.team, style: const TextStyle(color: Colors.white70)),
+                    title: Center(
+                      child: Text(p.name, style: TextStyle(color: color)),
+                    ),
+                    subtitle: Center(
+                      child: Text(p.team, style: const TextStyle(color: Colors.white70)),
+                    ),
                   ),
                 )),
                 const Divider(color: Colors.amber),

@@ -192,6 +192,7 @@ class FirebaseUtilStorage {
     }
   }
   Future<bool> checkPlayers( ) async {
+
     final querySnapshot = await _firestore
         .collection('players')
         .doc("A")
@@ -201,6 +202,7 @@ class FirebaseUtilStorage {
 
     return querySnapshot.docs.isNotEmpty;
   }
+
   Future<List<QuerySnapshot<Object?>>> loadPlayers() async{
     QuerySnapshot attackers = await _firestore.collection('players')
         .doc("A")
