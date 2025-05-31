@@ -1,3 +1,5 @@
+import 'package:fantadiv/viewmodels/calendar_viewmodel.dart';
+import 'package:fantadiv/viewmodels/file_picker_viewmodel.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -8,29 +10,54 @@ import 'dart:developer';
 import 'firebase_options.dart';
 import 'view/homepage.dart';
 import 'view/login_page.dart';
-import 'viewmodels/calendar_viewmodel.dart';
-import 'viewmodels/file_picker_viewmodel.dart';
 
 late final String firebaseSource;
 
 
-
-Future<void> main() async {
+void main() async {
+  print('🚀 Inizio main()');
   log('🚀 Inizio main()');
-  WidgetsFlutterBinding.ensureInitialized();
 
-  firebaseSource = kIsWeb ? 'Firebase Web API' : 'Firebase Mobile API';
-  log('🔄 Inizializzazione Firebase: $firebaseSource');
+  WidgetsFlutterBinding.ensureInitialized();
+  print('✅ WidgetsFlutterBinding done');
+  log('✅ WidgetsFlutterBinding done');
 
   try {
-    await Firebase.initializeApp(
-      options: DefaultFirebaseOptions.currentPlatform,
-    );
-    log('✅ Firebase inizializzato');
-  } catch (e, stack) {
+    if (kIsWeb) {
+      print('🌐 Rilevato Web');
+      log('🌐 Rilevato Web');
+
+      firebaseSource = 'Firebase Web API';
+      print('🔄 Inizializzazione Firebase Web...');
+      log('🔄 Inizializzazione Firebase Web...');
+
+      await Firebase.initializeApp(
+        options: DefaultFirebaseOptions.web,
+      );
+
+      print('✅ Firebase Web inizializzato con successo');
+      log('✅ Firebase Web inizializzato con successo');
+    } else {
+      print('📱 Rilevato Mobile');
+      log('📱 Rilevato Mobile');
+
+      firebaseSource = 'Firebase Mobile API';
+      print('🔄 Inizializzazione Firebase Mobile...');
+      log('🔄 Inizializzazione Firebase Mobile...');
+
+      await Firebase.initializeApp();
+
+      print('✅ Firebase Mobile inizializzato con successo');
+      log('✅ Firebase Mobile inizializzato con successo');
+    }
+  } catch (e, stackTrace) {
     firebaseSource = 'Errore Firebase Init';
-    log('❌ Errore Firebase.initializeApp(): $e', stackTrace: stack);
+    print('❌ Errore durante Firebase.initializeApp: $e');
+    log('❌ Errore durante Firebase.initializeApp: $e', stackTrace: stackTrace);
   }
+
+  print('🏁 Chiamo runApp()');
+  log('🏁 Chiamo runApp()');
 
   runApp(
     MultiProvider(
