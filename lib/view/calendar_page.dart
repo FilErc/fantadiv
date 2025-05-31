@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../../viewmodels/calendar_viewmodel.dart';
 import '../viewmodels/file_picker_viewmodel.dart';
 import 'alternative_view.dart';
+import 'mark_view.dart';
 import 'original_view.dart';
 
 class CalendarPage extends StatefulWidget {
@@ -18,6 +19,7 @@ class _CalendarPageState extends State<CalendarPage> {
   final List<_PageConfig> pages = [
     _PageConfig(title: 'Generatore Manuale', builder: (context) => const ManualViewWrapper()),
     _PageConfig(title: 'Importa da Excel/Visualizza listone', builder: (context) => const AlternativeViewWrapper()),
+    _PageConfig(title: 'Importa i voti', builder: (context) => const MarksGetterViewWrapper()),
     // Aggiungi qui nuove pagine:
     // _PageConfig(title: 'NomePagina', builder: (context) => NomeView()),
   ];
@@ -100,12 +102,28 @@ class AlternativeViewWrapper extends StatelessWidget {
       create: (_) => FilePickerViewModel(),
       child: Scaffold(
         backgroundColor: Colors.black,
-        appBar: AppBar(
-          title: const Text('Importa da Excel'),
-          backgroundColor: Colors.grey[900],
-        ),
         body: const AlternativeView(),
       ),
     );
   }
 }
+
+class MarksGetterViewWrapper extends StatelessWidget {
+    const MarksGetterViewWrapper({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return ChangeNotifierProvider(
+      create: (_) => FilePickerViewModel(),
+      child: Scaffold(
+        backgroundColor: Colors.black,
+        appBar: AppBar(
+          title: const Text('Importa i voti'),
+          backgroundColor: Colors.grey[900],
+        ),
+        body: const MarkView(),
+      ),
+    );
+  }
+}
+

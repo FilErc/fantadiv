@@ -221,4 +221,64 @@ class FirebaseUtilStorage {
 
     return [attackers, midfielders, defenders, goalkeepers];
   }
+  Future<DocumentSnapshot?> findPlayerInAnyRole(String name) async {
+    const List<String> roles = ['A', 'C', 'D', 'P'];
+
+    for (String role in roles) {
+      final querySnapshot = await _firestore
+          .collection('players')
+          .doc(role)
+          .collection('players')
+          .where('name', isEqualTo: name)
+          .get();
+
+      if (querySnapshot.docs.isNotEmpty) {
+        return querySnapshot.docs.first;
+      }
+
+      final aliasSnapshot = await _firestore
+          .collection('players')
+          .doc(role)
+          .collection('players')
+          .where('alias', arrayContains: name)
+          .get();
+
+      if (aliasSnapshot.docs.isNotEmpty) {
+        return aliasSnapshot.docs.first;
+      }
+    }
+
+    return null;
+  }
+
+  Future<List<Players>> searchPlayersByNameFragment(String nameFragment) async {
+    final List<Players> results = [];
+    final List<String> roles = ['A', 'C', 'D', 'P'];
+    final fragmentLower = nameFragment.toLowerCase();
+
+    for (String role in roles) {
+      final querySnapshot = await _firestore
+          .collection('players')
+          .doc(role)
+          .collection('players')
+          .get();
+
+      for (final doc in querySnapshot.docs) {
+        final player = Players.fromMap(doc.data());
+        final nameMatch = player.name.toLowerCase().contains(fragmentLower);
+        final aliasMatch = player.alias.any((a) => a.toLowerCase().contains(fragmentLower));
+        if (nameMatch || aliasMatch) {
+          results.add(player);
+        }
+      }
+    }
+
+    // Rimuove duplicati
+    final unique = <String, Players>{};
+    for (var p in results) {
+      unique[p.name] = p;
+    }
+
+    return unique.values.toList();
+  }
 }

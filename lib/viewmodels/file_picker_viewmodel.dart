@@ -1,15 +1,11 @@
 import 'dart:typed_data';
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:excel/excel.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-
 import '../db/firebase_util_storage.dart';
 import '../models/players.dart';
-
 import 'dart:io' show File;
-
 
 class FilePickerViewModel extends ChangeNotifier {
   final FirebaseUtilStorage _storage = FirebaseUtilStorage();
@@ -18,6 +14,7 @@ class FilePickerViewModel extends ChangeNotifier {
   bool _isLoading = false;
   bool _alreadyLoaded = false;
   bool isLoadingPlayers = false;
+  bool isSearching = false;
 
   final Map<String, List<Players>> _playersByPosition = {};
   Map<String, List<Players>> get playersByPosition => _playersByPosition;
@@ -25,6 +22,14 @@ class FilePickerViewModel extends ChangeNotifier {
   String? get filePath => _filePath;
   bool get isLoading => _isLoading;
   bool get alreadyLoaded => _alreadyLoaded;
+
+  List<Players> get searchResults => matchingPlayers;
+  List<Players> matchingPlayers = [];
+  Players? searchedPlayer;
+
+  List<Players> get allPlayers {
+    return playersByPosition.values.expand((list) => list).toList();
+  }
 
   FilePickerViewModel() {
     checker();
@@ -37,15 +42,12 @@ class FilePickerViewModel extends ChangeNotifier {
     FilePickerResult? result = await FilePicker.platform.pickFiles(
       type: FileType.custom,
       allowedExtensions: ['xls', 'xlsx'],
-      withData: true, // NECESSARIO per Web
+      withData: true,
     );
 
     if (result != null) {
-      print("📂 File selezionato: ${result.files.single.name}");
       await _readExcelFile(result);
       _alreadyLoaded = true;
-    } else {
-      print("⚠️ Nessun file selezionato");
     }
 
     _isLoading = false;
@@ -58,35 +60,20 @@ class FilePickerViewModel extends ChangeNotifier {
 
       if (kIsWeb) {
         bytes = result.files.single.bytes;
-        if (bytes == null) {
-          return;
-        }
+        if (bytes == null) return;
       } else {
         final path = result.files.single.path;
-        if (path == null) {
-          return;
-        }
+        if (path == null) return;
         final file = File(path);
         bytes = await file.readAsBytes();
       }
 
       final excel = Excel.decodeBytes(bytes!);
-      print("📄 Tabelle trovate: ${excel.tables.keys}");
 
-      const allowedSheets = {
-        'Attaccanti',
-        'Centrocampisti',
-        'Difensori',
-        'Portieri',
-      };
+      const allowedSheets = {'Attaccanti', 'Centrocampisti', 'Difensori', 'Portieri'};
 
       for (var table in excel.tables.keys) {
-        if (!allowedSheets.contains(table)) {
-          print("⛔ Tabella ignorata: $table");
-          continue;
-        }
-
-        print("📋 Leggo tabella visibile: $table");
+        if (!allowedSheets.contains(table)) continue;
 
         for (var row in excel.tables[table]!.rows) {
           final isEmptyRow = row.every((cell) {
@@ -96,23 +83,17 @@ class FilePickerViewModel extends ChangeNotifier {
 
           if (isEmptyRow) continue;
 
-          List<String> rowData = [];
-          for (var cell in row) {
+          List<String> rowData = row.map((cell) {
             String value = cell?.value?.toString() ?? "";
             if (value.contains(":")) value = value.split(":").last.trim();
-            rowData.add(value);
-          }
+            return value;
+          }).toList();
 
-          print("➡️ Riga: $rowData");
           await _storage.storePlayers(rowData);
         }
       }
-
-
-      print("✅ Importazione completata con successo.");
-      print("────────────────────────────");
     } catch (e) {
-      print("❌ Errore durante la lettura del file Excel: $e");
+      print("Errore durante la lettura del file Excel: $e");
     }
   }
 
@@ -141,4 +122,23 @@ class FilePickerViewModel extends ChangeNotifier {
     isLoadingPlayers = false;
     notifyListeners();
   }
+
+  Future<void> searchPlayersByFragment(String fragment) async {
+    matchingPlayers.clear();
+    searchedPlayer = null;
+    isSearching = true;
+    notifyListeners();
+
+    if (fragment.trim().isEmpty) {
+      isSearching = false;
+      notifyListeners();
+      return;
+    }
+
+    final list = await _storage.searchPlayersByNameFragment(fragment.trim());
+    matchingPlayers = list;
+    isSearching = false;
+    notifyListeners();
+  }
+
 }
