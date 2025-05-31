@@ -186,8 +186,7 @@ class FirebaseUtilStorage {
   Future<void> storePlayers(List<String> line)async {
     if(line.isNotEmpty && int.tryParse(line[0]) != null){
       DocumentReference newDocRef = _firestore.collection('players').doc(line[1]).collection('players').doc();
-      Players players = Players(name: line[3], position: line[1], team: line[4], alias: []
-      );
+      Players players = Players(name: line[3], position: line[1], team: line[4]);
       await newDocRef.set(players.toMap());
     }
   }

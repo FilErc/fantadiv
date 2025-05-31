@@ -2,7 +2,7 @@ class Players {
   final String name;
   final String position;
   final String team;
-  final List<String> alias;
+  final List<String>? alias;
   final List<List<int>>? statsGrid;
   final int? goals;
   final int? assists;
