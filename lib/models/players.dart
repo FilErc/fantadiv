@@ -3,7 +3,7 @@ class Players {
   final String position;
   final String team;
   final List<String> alias;
-  final List<Map<String, dynamic>>? statsGrid;
+  late final List<Map<String, dynamic>>? statsGrid;
 
   Players({
     required this.name,

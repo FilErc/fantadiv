@@ -218,4 +218,11 @@ class FirebaseUtilStorage {
 
     return grouped;
   }
+
+  Future<void> savePlayer(Players player) async {
+    final playerId = player.name.replaceAll(' ', '_').toLowerCase();
+    final docRef = _firestore.collection('players').doc(playerId);
+    await docRef.set(player.toMap(), SetOptions(merge: true));
+  }
+
 }
