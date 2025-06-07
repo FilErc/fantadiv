@@ -183,102 +183,39 @@ class FirebaseUtilStorage {
       return [];
     }
   }
-  Future<void> storePlayers(List<String> line)async {
-    if(line.isNotEmpty && int.tryParse(line[0]) != null){
-      DocumentReference newDocRef = _firestore.collection('players').doc(line[1]).collection('players').doc();
-      Players players = Players(name: line[3], position: line[1], team: line[4], alias: []);
+  Future<void> storePlayers(List<String> line) async {
+    if (line.isNotEmpty && int.tryParse(line[0]) != null) {
+      DocumentReference newDocRef = _firestore.collection('players').doc(line[0]);
+
+      Players players = Players(
+        name: line[3],
+        position: line[1], // 'A', 'C', 'D', 'P'
+        team: line[4],
+        alias: [],
+      );
+
       await newDocRef.set(players.toMap());
     }
   }
-  Future<bool> checkPlayers( ) async {
 
-    final querySnapshot = await _firestore
-        .collection('players')
-        .doc("A")
-        .collection('players')
-        .limit(1)
-        .get();
+  Future<Map<String, List<Players>>> loadPlayers() async {
+    QuerySnapshot snapshot = await _firestore.collection('players').get();
 
-    return querySnapshot.docs.isNotEmpty;
-  }
+    final allPlayers = snapshot.docs.map((doc) => Players.fromMap(doc.data() as Map<String, dynamic>)).toList();
 
-  Future<List<QuerySnapshot<Object?>>> loadPlayers() async{
-    QuerySnapshot attackers = await _firestore.collection('players')
-        .doc("A")
-        .collection('players').get();
+    final grouped = {
+      'A': <Players>[],
+      'C': <Players>[],
+      'D': <Players>[],
+      'P': <Players>[],
+    };
 
-    QuerySnapshot midfielders = await _firestore.collection('players')
-        .doc("C")
-        .collection('players').get();
-
-    QuerySnapshot defenders = await _firestore.collection('players')
-        .doc("D")
-        .collection('players').get();
-
-    QuerySnapshot goalkeepers = await _firestore.collection('players')
-        .doc("P")
-        .collection('players').get();
-
-    return [attackers, midfielders, defenders, goalkeepers];
-  }
-  Future<DocumentSnapshot?> findPlayerInAnyRole(String name) async {
-    const List<String> roles = ['A', 'C', 'D', 'P'];
-
-    for (String role in roles) {
-      final querySnapshot = await _firestore
-          .collection('players')
-          .doc(role)
-          .collection('players')
-          .where('name', isEqualTo: name)
-          .get();
-
-      if (querySnapshot.docs.isNotEmpty) {
-        return querySnapshot.docs.first;
-      }
-
-      final aliasSnapshot = await _firestore
-          .collection('players')
-          .doc(role)
-          .collection('players')
-          .where('alias', arrayContains: name)
-          .get();
-
-      if (aliasSnapshot.docs.isNotEmpty) {
-        return aliasSnapshot.docs.first;
+    for (final player in allPlayers) {
+      if (grouped.containsKey(player.position)) {
+        grouped[player.position]!.add(player);
       }
     }
 
-    return null;
-  }
-
-  Future<List<Players>> searchPlayersByNameFragment(String nameFragment) async {
-    final List<Players> results = [];
-    final List<String> roles = ['A', 'C', 'D', 'P'];
-    final fragmentLower = nameFragment.toLowerCase();
-
-    for (String role in roles) {
-      final querySnapshot = await _firestore
-          .collection('players')
-          .doc(role)
-          .collection('players')
-          .get();
-
-      for (final doc in querySnapshot.docs) {
-        final player = Players.fromMap(doc.data());
-        final nameMatch = player.name.toLowerCase().contains(fragmentLower);
-        final aliasMatch = player.alias.any((a) => a.toLowerCase().contains(fragmentLower));
-        if (nameMatch || aliasMatch) {
-          results.add(player);
-        }
-      }
-    }
-
-    // Rimuove duplicati
-    final unique = <String, Players>{};
-    for (var p in results) {
-      unique[p.name] = p;
-    }
-
-    return unique.values.toList();
+    return grouped;
   }
 }

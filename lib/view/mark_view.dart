@@ -20,7 +20,6 @@ class MarkView extends StatelessWidget {
                   ? const CircularProgressIndicator()
                   : ElevatedButton.icon(
                 onPressed: () {
-                  vm.fetchAndStoreAllPages();
                 },
                 icon: const Icon(Icons.cloud_download),
                 label: const Text('Avvia Importazione'),

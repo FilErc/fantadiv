@@ -2,7 +2,6 @@ import 'dart:typed_data';
 import 'package:flutter/foundation.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:excel/excel.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import '../db/firebase_util_storage.dart';
 import '../models/players.dart';
 import 'dart:io' show File;
@@ -98,29 +97,41 @@ class FilePickerViewModel extends ChangeNotifier {
   }
 
   Future<void> checker() async {
+    if (_alreadyLoaded) return;
+
     isLoadingPlayers = true;
     notifyListeners();
 
-    if (await _storage.checkPlayers()) {
-      _alreadyLoaded = true;
+    try {
+      final groupedPlayers = await _storage.loadPlayers();
 
-      List<QuerySnapshot<Object?>> snapshots = await _storage.loadPlayers();
+      // Verifica se c'è almeno un giocatore in almeno una delle liste
+      final hasPlayers = groupedPlayers.values.any((list) => list.isNotEmpty);
 
-      for (var snap in snapshots) {
-        for (var doc in snap.docs) {
-          final player = Players.fromMap(doc.data() as Map<String, dynamic>);
-          final pos = player.position;
-
-          _playersByPosition.putIfAbsent(pos, () => []);
-          _playersByPosition[pos]!.add(player);
-        }
+      if (!hasPlayers) {
+        _alreadyLoaded = false;
+        return;
       }
-    } else {
-      _alreadyLoaded = false;
-    }
 
-    isLoadingPlayers = false;
-    notifyListeners();
+      _playersByPosition.clear();
+
+      // Corretto uso di Map<String, List<Players>>
+      for (final entry in groupedPlayers.entries) {
+        final pos = entry.key;
+        final players = entry.value;
+
+        _playersByPosition[pos] = List.from(players);
+      }
+
+      _alreadyLoaded = true;
+    } catch (e, stack) {
+      print('❌ Errore nel checker: $e');
+      print(stack);
+      _alreadyLoaded = false;
+    } finally {
+      isLoadingPlayers = false;
+      notifyListeners();
+    }
   }
 
   Future<void> searchPlayersByFragment(String fragment) async {
@@ -135,10 +146,47 @@ class FilePickerViewModel extends ChangeNotifier {
       return;
     }
 
-    final list = await _storage.searchPlayersByNameFragment(fragment.trim());
+    final list = searchPlayersByNameFragment(fragment.trim());
     matchingPlayers = list;
     isSearching = false;
     notifyListeners();
+  }
+
+  Players? findPlayerInAnyRole(String name) {
+    final lowerName = name.toLowerCase();
+
+    for (final players in _playersByPosition.values) {
+      for (final player in players) {
+        if (player.name.toLowerCase() == lowerName) {
+          return player;
+        }
+        if (player.alias.any((alias) => alias.toLowerCase() == lowerName)) {
+          return player;
+        }
+      }
+    }
+
+    return null;
+  }
+
+  List<Players> searchPlayersByNameFragment(String nameFragment) {
+    final lowerFragment = nameFragment.toLowerCase();
+    final Set<String> seenNames = {};
+    final List<Players> results = [];
+
+    for (final players in _playersByPosition.values) {
+      for (final player in players) {
+        final nameMatch = player.name.toLowerCase().contains(lowerFragment);
+        final aliasMatch = player.alias.any((alias) => alias.toLowerCase().contains(lowerFragment));
+
+        if ((nameMatch || aliasMatch) && !seenNames.contains(player.name)) {
+          results.add(player);
+          seenNames.add(player.name); // evita duplicati per nome
+        }
+      }
+    }
+
+    return results;
   }
 
 }
