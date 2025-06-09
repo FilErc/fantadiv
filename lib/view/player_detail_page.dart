@@ -25,10 +25,15 @@ class PlayerDetailPage extends StatelessWidget {
             const SizedBox(height: 8),
             Text('Alias:', style: Theme.of(context).textTheme.titleMedium),
             const SizedBox(height: 4),
-            ...player.alias.map((a) => Padding(
-              padding: const EdgeInsets.only(bottom: 4),
-              child: Text('• $a', style: const TextStyle(color: Colors.white70)),
-            )),
+            Wrap(
+              spacing: 6,
+              runSpacing: 6,
+              children: player.alias.map((a) => Chip(
+                label: Text(a),
+                backgroundColor: Colors.blueGrey[700],
+                labelStyle: const TextStyle(color: Colors.white),
+              )).toList(),
+            ),
             const SizedBox(height: 20),
             if (player.statsGrid != null && player.statsGrid!.isNotEmpty)
               Column(

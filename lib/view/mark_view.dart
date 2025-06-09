@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:fantadiv/viewmodels/mark_viewmodel.dart';
+import 'package:fantadiv/view/player_linking_view.dart';
+
+import '../viewmodels/file_picker_viewmodel.dart';
 
 class MarkView extends StatelessWidget {
   const MarkView({super.key});
@@ -8,7 +11,7 @@ class MarkView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
-      create: (_) => MarkViewModel(),
+      create: (_) => MarkViewModel(context.read<FilePickerViewModel>()),
       child: const _MarkView(),
     );
   }
@@ -27,7 +30,22 @@ class _MarkView extends StatelessWidget {
         child: vm.isLoading
             ? const CircularProgressIndicator()
             : ElevatedButton(
-          onPressed: () => vm.startAutoImport(),
+          onPressed: () async {
+            await vm.startAutoImport(
+              onPlayerNotFound: (name) async {
+                final selected = await Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => PlayerLinkingView(
+                      searchName: name,
+                      allPlayers: vm.allPlayers,
+                    ),
+                  ),
+                );
+                return selected;
+              },
+            );
+          },
           child: const Text('Avvia Importazione'),
         ),
       ),

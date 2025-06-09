@@ -181,12 +181,11 @@ class FilePickerViewModel extends ChangeNotifier {
 
         if ((nameMatch || aliasMatch) && !seenNames.contains(player.name)) {
           results.add(player);
-          seenNames.add(player.name); // evita duplicati per nome
+          seenNames.add(player.name);
         }
       }
     }
 
     return results;
   }
-
 }

@@ -219,10 +219,39 @@ class FirebaseUtilStorage {
     return grouped;
   }
 
-  Future<void> savePlayer(Players player) async {
-    final playerId = player.name.replaceAll(' ', '_').toLowerCase();
-    final docRef = _firestore.collection('players').doc(playerId);
-    await docRef.set(player.toMap(), SetOptions(merge: true));
-  }
+  Future<void> savePlayersInBatch(List<Players> players) async {
+    List<WriteBatch> batches = [];
+    WriteBatch currentBatch = _firestore.batch();
+    int operationCount = 0;
 
+    for (final player in players) {
+      if (operationCount >= 500) {
+        // Aggiungi la batch corrente alla lista e inizia una nuova batch
+        batches.add(currentBatch);
+        currentBatch = _firestore.batch();
+        operationCount = 0;
+      }
+
+      final playerId = player.name.replaceAll(' ', '_').toLowerCase();
+      final docRef = _firestore.collection('players').doc(playerId);
+
+      currentBatch.set(docRef, player.toMap(), SetOptions(merge: true));
+      operationCount++;
+    }
+
+    // Aggiungi l'ultima batch
+    batches.add(currentBatch);
+
+    // Esegui ogni batch in una sola chiamata
+    for (final batch in batches) {
+      try {
+        await batch.commit();
+        print("✅ Batch completato.");
+      } catch (e) {
+        print("❌ Errore durante la commit di una batch: $e");
+      }
+    }
+
+    print("✅ Tutti i giocatori salvati su Firestore.");
+  }
 }

@@ -76,6 +76,7 @@ flutter:
     - images/Draw.png
     - images/LvW.png
     - images/WvL.png
+    - assets/fallback/VotiExcelUfficiali-_1_.xlsx
   #   - images/a_dot_burr.jpeg
   #   - images/a_dot_ham.jpeg
 

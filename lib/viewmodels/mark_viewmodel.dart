@@ -1,8 +1,5 @@
 import 'package:fantadiv/services/convertio_service.dart';
 import 'package:flutter/cupertino.dart';
-import 'dart:io';
-import 'package:http/http.dart' as http;
-import 'package:path_provider/path_provider.dart';
 import 'package:excel/excel.dart';
 import 'file_picker_viewmodel.dart';
 import '../db/firebase_util_storage.dart';
@@ -12,127 +9,157 @@ class MarkViewModel extends ChangeNotifier {
   int _currentGiornata = 1;
   bool isLoading = false;
   final FirebaseUtilStorage _storage = FirebaseUtilStorage();
-  FilePickerViewModel? filePicker;
+  final FilePickerViewModel _filepicker;
+  MarkViewModel(this._filepicker);
 
-  void init(FilePickerViewModel filePicker) {
-    this.filePicker = filePicker;
-  }
+  bool _shouldPause = false;
+  void pauseLoop() => _shouldPause = true;
+  void resumeLoop() => _shouldPause = false;
 
-  void startAutoImport() {
+  Future<void> startAutoImport({
+    required Future<Players?> Function(String name) onPlayerNotFound,
+  }) async {
     isLoading = true;
     notifyListeners();
-    _importNext();
+    await _importNext(onPlayerNotFound);
+    isLoading = false;
+    notifyListeners();
   }
 
-  void _importNext() async {
+  Future<void> _importNext(
+      Future<Players?> Function(String name) onPlayerNotFound,
+      ) async {
     if (_currentGiornata > 38) {
       print("🎉 Completato");
       await _saveAllPlayersToFirestore();
-      isLoading = false;
-      notifyListeners();
       return;
     }
 
-    final url =
-        'https://www.pianetafanta.it/voti-ufficiosi-excel.asp?giornataScelta=$_currentGiornata&searchBonus=';
+    final file = await ConvertioService.scaricaConvertiERiformatta(_currentGiornata);
+    if (file != null) {
+      final excel = Excel.decodeBytes(await file.readAsBytes());
+      for (var table in excel.tables.keys) {
+        final rows = excel.tables[table]!.rows;
+        for (int i = 0; i < rows.length; i++) {
+          final row = rows[i];
+          final values = row.map((e) => e?.value.toString().trim() ?? '').toList();
+          print(values);
+          if (values.isEmpty) continue;
 
-    print('⬇️ Scarico giornata $_currentGiornata: $url');
+          final rawValue = values[0].split(" ");
+          final parsed = num.tryParse(rawValue[0]);
+          if (parsed == null) continue;
 
-    try {
-      final response = await http.get(Uri.parse(url));
-      final tempDir = await getTemporaryDirectory();
-      final xlsFile = File('${tempDir.path}/giornata$_currentGiornata.xls');
-      await xlsFile.writeAsBytes(response.bodyBytes);
+          final result = extractNameAndTeam(values[0]);
+          final name = result['name']!;
+          final team = result['team']!;
+          final index = int.tryParse(result['index']!);
 
-      final convertedFile = await ConvertioService.convertXlsToXlsx(xlsFile);
-      if (convertedFile != null) {
-        final bytes = convertedFile.readAsBytesSync();
-        final excel = Excel.decodeBytes(bytes);
+          Players? player = _findPlayer(name, team);
+          print(player?.alias);
 
-        for (var table in excel.tables.keys) {
-          final rows = excel.tables[table]!.rows;
-          for (int i = 0; i < rows.length; i++) {
-            final row = rows[i];
-            final values = row.map((e) => e?.value.toString().trim() ?? '').toList();
+          if (player == null) {
+            _shouldPause = true;
+            player = await onPlayerNotFound(name);
+            _shouldPause = false;
+          }
 
-            if (values.length < 10 && i + 2 < rows.length) {
-              final line2 = excel.tables[table]!.rows[i + 1]
-                  .map((e) => e?.value.toString().trim() ?? '').toList();
-              values.insertAll(0, line2);
-              values.insertAll(0, row.map((e) => e?.value.toString().trim() ?? ''));
-              i += 2;
-            }
+          if (player == null) continue;
 
-            if (values.length < 35) continue;
-            if (values[1].toUpperCase().startsWith("ALL")) continue;
-
-            final name = values[1].replaceAll(RegExp(r'\s+'), ' ').trim();
-            final team = values[4];
-
-            final player = _findPlayer(name, team);
-            if (player == null) {
-              print("❌ Giocatore non trovato: $name ($team)");
-              continue;
-            }
-
-            final giornataIndex = _currentGiornata - 1;
-            player.statsGrid ??= List.generate(38, (_) => {});
-
-            player.statsGrid![giornataIndex] = {
-              'GF': int.tryParse(values[6]) ?? 0,
-              'GS': int.tryParse(values[7]) ?? 0,
-              'Aut': int.tryParse(values[8]) ?? 0,
-              'Ass': int.tryParse(values[9]) ?? 0,
-              'Amm': int.tryParse(values[18]) ?? 0,
-              'Esp': int.tryParse(values[19]) ?? 0,
-              'Gdv': int.tryParse(values[20]) ?? 0,
-              'Gdp': int.tryParse(values[21]) ?? 0,
-              'RigS': int.tryParse(values[22]) ?? 0,
-              'RigP': int.tryParse(values[23]) ?? 0,
-              'Rt': int.tryParse(values[24]) ?? 0,
-              'Rs': int.tryParse(values[25]) ?? 0,
-              'T': int.tryParse(values[26]) ?? 0,
-              'VG': double.tryParse(values[30].replaceAll(',', '.')) ?? 0.0,
-              'VC': double.tryParse(values[31].replaceAll(',', '.')) ?? 0.0,
-              'VTS': double.tryParse(values[32].replaceAll(',', '.')) ?? 0.0,
-            };
+          final giornataIndex = _currentGiornata - 1;
+          final lastIndex = rawValue.length - 1;
+          final vg = double.tryParse(rawValue[lastIndex].replaceAll(',', '.')) ?? 0.0;
+          final vc = double.tryParse(rawValue[lastIndex - 1].replaceAll(',', '.')) ?? 0.0;
+          final vts = double.tryParse(rawValue[lastIndex - 2].replaceAll(',', '.')) ?? 0.0;
+          player.statsGrid ??= List.generate(38, (_) => {});
+          player.statsGrid![giornataIndex] = {
+            'GF': int.tryParse(rawValue[index! + 1]) ?? 0,
+            'GS': int.tryParse(rawValue[index + 2]) ?? 0,
+            'Aut': int.tryParse(rawValue[index + 3]) ?? 0,
+            'Ass': int.tryParse(rawValue[index + 4]) ?? 0,
+            'Amm': int.tryParse(rawValue[index + 13]) ?? 0,
+            'Esp': int.tryParse(rawValue[index + 14]) ?? 0,
+            'Gdv': int.tryParse(rawValue[index + 15]) ?? 0,
+            'Gdp': int.tryParse(rawValue[index + 16]) ?? 0,
+            'RigS': int.tryParse(rawValue[index + 17]) ?? 0,
+            'RigP': int.tryParse(rawValue[index + 18]) ?? 0,
+            'Rt': int.tryParse(rawValue[index + 19]) ?? 0,
+            'Rs': int.tryParse(rawValue[index + 20]) ?? 0,
+            'T': int.tryParse(rawValue[index + 21]) ?? 0,
+            'VG': vg,
+            'VC': vc,
+            'VTS': vts,
+          };
+          while (_shouldPause) {
+            await Future.delayed(const Duration(milliseconds: 100));
           }
         }
-      } else {
-        print("⚠️ Conversione fallita per giornata $_currentGiornata");
       }
-    } catch (e) {
-      print("❌ Errore giornata $_currentGiornata: $e");
+    } else {
+      print("⚠️ Conversione fallita per giornata $_currentGiornata");
     }
 
     _currentGiornata++;
     await Future.delayed(const Duration(milliseconds: 300));
-    _importNext();
+    await _importNext(onPlayerNotFound);
   }
 
   Future<void> _saveAllPlayersToFirestore() async {
-    if (filePicker == null) return;
-    for (final player in filePicker!.allPlayers) {
-      try {
-        await _storage.savePlayer(player);
-        print("✅ Salvato su Firestore: ${player.name}");
-      } catch (e) {
-        print("❌ Errore salvataggio ${player.name}: $e");
-      }
-    }
+    await _storage.savePlayersInBatch(_filepicker.allPlayers);
   }
 
   Players? _findPlayer(String name, String team) {
-    if (filePicker == null) return null;
     final lower = name.toLowerCase();
     try {
-      return filePicker!.allPlayers.firstWhere(
-            (p) => (p.name.toLowerCase().contains(lower) ||
-            p.alias.any((alias) => alias.toLowerCase().contains(lower))) &&
-            p.team.toLowerCase() == team.toLowerCase(),
-      );
+      return allPlayers.firstWhere(
+              (p) {
+            final nameMatch = p.name.toLowerCase().contains(lower);
+            final aliasMatch = p.alias.any((alias) => alias.trim().toLowerCase().contains(lower));
+            //final teamMatch = p.team.toLowerCase() == team.toLowerCase();
+            return (nameMatch || aliasMatch);
+          },);
     } catch (_) {
       return null;
     }
+  }
+
+  List<Players> get allPlayers => _filepicker.allPlayers;
+
+  Map<String, String> extractNameAndTeam(String fullString) {
+    final tokens = fullString
+        .split(' ')
+        .where((element) => element.trim().isNotEmpty)
+        .toList();
+
+    int index = 1;
+    StringBuffer nameBuffer = StringBuffer();
+    int teamIndex = 0;
+
+    while (index < tokens.length) {
+      final token = tokens[index];
+
+      if (token.contains('.')) {
+        teamIndex = index + 3;
+      } else if (token.length == 1) {
+        teamIndex = index + 2;
+      }
+
+
+      if (token.contains('.') || token.length == 1) {
+        break;
+      }
+
+      nameBuffer.write('$token ');
+      index++;
+    }
+
+    final name = nameBuffer.toString().trim();
+    final team = teamIndex < tokens.length ? tokens[teamIndex] : '';
+
+    return {
+      'name': name,
+      'team': team,
+      'index': teamIndex.toString(),
+    };
   }
 }

@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'package:excel/excel.dart';
 import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
 
@@ -7,8 +8,14 @@ class ConvertioService {
   static const String _apiKey = '3299fb40e7bdfab8021f132f67b35aac';
   static const String _baseUrl = 'https://api.convertio.co';
 
-  static Future<File?> convertXlsToXlsx(File xlsFile) async {
+  static Future<File?> scaricaConvertiERiformatta(int giornata) async {
     try {
+      final url = 'https://www.pianetafanta.it/voti-ufficiosi-excel.asp?giornataScelta=$giornata&searchBonus=';
+      final response = await http.get(Uri.parse(url));
+      final tempDir = await getTemporaryDirectory();
+      final xlsFile = File('${tempDir.path}/giornata$giornata.xls');
+      await xlsFile.writeAsBytes(response.bodyBytes);
+
       final initResponse = await http.post(
         Uri.parse('$_baseUrl/convert'),
         headers: {'Content-Type': 'application/json'},
@@ -21,71 +28,114 @@ class ConvertioService {
       );
 
       final initData = jsonDecode(initResponse.body);
-      if (initData['code'] != 200) {
-        print('❌ Errore creazione job: ${initData['error']}');
+
+      if (initData['error'] != null) {
+        print(initData['error']);
         return null;
       }
 
       final jobId = initData['data']['id'];
-      final filename = xlsFile.uri.pathSegments.last;
-      print('📤 Job creato: $jobId');
-
-      final uploadUrl = '$_baseUrl/convert/$jobId/$filename';
-      final fileBytes = await xlsFile.readAsBytes();
-
-      final uploadResponse = await http.put(
-        Uri.parse(uploadUrl),
-        headers: {
-          'Content-Type': 'application/octet-stream',
-        },
-        body: fileBytes,
-      );
-
-      if (uploadResponse.statusCode != 200) {
-        print('❌ Errore upload file: ${uploadResponse.statusCode}');
-        return null;
-      }
-
-      print('📁 File caricato correttamente');
+      final uploadUrl = '$_baseUrl/convert/$jobId/${xlsFile.uri.pathSegments.last}';
+      await http.put(Uri.parse(uploadUrl), body: await xlsFile.readAsBytes());
 
       while (true) {
         await Future.delayed(const Duration(seconds: 2));
-
-        final statusResponse = await http.get(
-          Uri.parse('$_baseUrl/convert/$jobId/status'),
-        );
-
-        final statusData = jsonDecode(statusResponse.body);
-
-        if (statusData['code'] != 200 || statusData['data'] == null) {
-          print('❌ Errore polling: ${statusData['error'] ?? statusData}');
-          return null;
-        }
-
+        final status = await http.get(Uri.parse('$_baseUrl/convert/$jobId/status'));
+        final statusData = jsonDecode(status.body);
         final step = statusData['data']['step'];
-        final output = statusData['data']['output'];
+
+        if (step == 'finish') {
+          final downloadUrl = statusData['data']['output']['url'];
+          final downloadResponse = await http.get(Uri.parse(downloadUrl));
+          final xlsxFile = File('${tempDir.path}/giornata$giornata.xlsx');
+          await xlsxFile.writeAsBytes(downloadResponse.bodyBytes);
+          return await riformattaEGeneraExcel(xlsxFile);
+        }
 
         if (step == 'error') {
-          print('❌ Job fallito: ${statusData['data']}');
+          print("❌ Conversione fallita: ${statusData['data']}");
           return null;
         }
-
-        if (step == 'finish' && output != null && output['url'] != null) {
-          final downloadUrl = output['url'];
-          final downloadResponse = await http.get(Uri.parse(downloadUrl));
-
-          final dir = await getTemporaryDirectory();
-          final newFile = File('${dir.path}/${filename}.xlsx');
-          await newFile.writeAsBytes(downloadResponse.bodyBytes);
-
-          print('✅ File convertito salvato in: ${newFile.path}');
-          return newFile;
-        }
-
-        print('⏳ Attendo conversione completata...');
       }
     } catch (e) {
-      print('❌ Eccezione Convertio: $e');
+      print('❌ Errore ConvertioService.giornata $giornata: $e');
+      return null;
+    }
+  }
+
+  static Future<File?> riformattaEGeneraExcel(File inputFile) async {
+    try {
+      final bytes = await inputFile.readAsBytes();
+      final excel = Excel.decodeBytes(bytes);
+      final newExcel = Excel.createExcel();
+
+      final defaultSheet = newExcel.getDefaultSheet();
+      if (defaultSheet != null && defaultSheet != 'Riformattato') {
+        newExcel.rename(defaultSheet, 'Riformattato');
+      }
+
+      final sheet = newExcel['Riformattato'];
+
+      for (var table in excel.tables.keys) {
+        final rows = excel.tables[table]!.rows;
+        int i = 0;
+
+        while (i < rows.length) {
+          final row = rows[i];
+
+          final isAllCaps = row.every((cell) {
+            final val = cell?.value?.toString();
+            if (val == null || val.trim().isEmpty) return false;
+            final isUpperCase = val == val.toUpperCase();
+            final isLettersOnly = RegExp(r"^[A-ZÀ-Ü\s.\'\-]+$").hasMatch(val);
+            return isUpperCase && isLettersOnly;
+          });
+
+          if (isAllCaps && i + 2 < rows.length) {
+            final nome = row.map((c) => c?.value?.toString() ?? '').join(' ').trim();
+
+            final secondaRiga = rows[i + 1]
+                .map((c) => c?.value?.toString().trim() ?? '')
+                .join(' ')
+                .split(RegExp(r'\s+'));
+
+            final terzaRiga = rows[i + 2]
+                .map((c) => c?.value?.toString().trim() ?? '')
+                .join(' ')
+                .split(RegExp(r'\s+'));
+
+            // Inserisce il nome completo tra codice e ruolo
+            final codice = secondaRiga.isNotEmpty ? secondaRiga[0] : '??';
+            final ruoli = secondaRiga.sublist(1, 3); // es: P P o D D
+            final team = secondaRiga.length > 3 ? secondaRiga[3] : '??';
+            final valori = secondaRiga.sublist(4) + terzaRiga;
+
+            final finalList = [codice, ...nome.split(' '), ...ruoli, team, ...valori];
+            final colonSeparated = finalList.map((e) => e.trim()).join(':');
+            sheet.appendRow([TextCellValue(colonSeparated)]);
+            i += 3;
+          } else {
+            final valori = row.map((c) {
+              final text = c?.value?.toString() ?? '';
+              return text.trim().replaceAll(RegExp(r'\s+'), ' ');
+            }).toList();
+
+            if (valori.any((v) => v.isNotEmpty)) {
+              final colonSeparated = valori.join(':');
+              sheet.appendRow([TextCellValue(colonSeparated)]);
+            }
+            i++;
+          }
+        }
+      }
+
+      final dir = await getTemporaryDirectory();
+      final outputFile = File('${dir.path}/Riformattato.xlsx');
+      await outputFile.writeAsBytes(newExcel.encode()!);
+      print('📄 File riformattato salvato in: ${outputFile.path}');
+      return outputFile;
+    } catch (e) {
+      print('❌ Errore durante la riformattazione: $e');
       return null;
     }
   }
