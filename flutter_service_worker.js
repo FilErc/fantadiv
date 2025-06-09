@@ -3,9 +3,10 @@ const MANIFEST = 'flutter-app-manifest';
 const TEMP = 'flutter-temp-cache';
 const CACHE_NAME = 'flutter-app-cache';
 
-const RESOURCES = {"assets/AssetManifest.bin": "1bedc48da6142066ec7797f0a99cce19",
-"assets/AssetManifest.bin.json": "7359b0ae26d233ad2715a392dd108b3b",
-"assets/AssetManifest.json": "4b7b6cb64b34df29cad75a68c7c5eb52",
+const RESOURCES = {"assets/AssetManifest.bin": "22487f9e47273b99893ac79e02b7fb30",
+"assets/AssetManifest.bin.json": "ffa7c982061f176c20ca5469fb89e840",
+"assets/AssetManifest.json": "6ecf5f94303bbc6e60aaa406b1ad9a86",
+"assets/assets/fallback/VotiExcelUfficiali-_1_.xlsx": "c2aee62a1e766b71107b2e7b15e9fefb",
 "assets/FontManifest.json": "dc3d03800ccca4601324923c0b1d6d57",
 "assets/fonts/MaterialIcons-Regular.otf": "e2fd85e1ffaac9cda304375a64a50829",
 "assets/images/Draw.png": "b37274f4a91a69d82b6dfdc25c9f972a",
@@ -27,10 +28,10 @@ const RESOURCES = {"assets/AssetManifest.bin": "1bedc48da6142066ec7797f0a99cce19
 "canvaskit/skwasm.js.symbols": "9fe690d47b904d72c7d020bd303adf16",
 "canvaskit/skwasm.wasm": "1c93738510f202d9ff44d36a4760126b",
 "flutter.js": "83d881c1dbb6d6bcd6b42e274605b69c",
-"flutter_bootstrap.js": "0f4fb36c64999f6e11372e1838f35370",
-"index.html": "ebeea9322793031c92b20a9e571996b8",
-"/": "ebeea9322793031c92b20a9e571996b8",
-"main.dart.js": "9303dabd697a0c4144e99392f79d3ac2",
+"flutter_bootstrap.js": "42569c664bf572bd764544ecbae51fdc",
+"index.html": "f03ee6037a35421e085c74a6da280cb0",
+"/": "f03ee6037a35421e085c74a6da280cb0",
+"main.dart.js": "15030dcdb87c0b567211578551c14d6e",
 "version.json": "e83c8a10cbaa89c321d1dc626fa1562c"};
 // The application shell files that are downloaded before a service worker can
 // start.
