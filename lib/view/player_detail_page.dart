@@ -1,5 +1,3 @@
-// Aggiornamento della PlayerDetailPage con i grafici prima delle statistiche e scrolling orizzontale
-
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:syncfusion_flutter_charts/charts.dart';
@@ -42,12 +40,11 @@ class PlayerDetailPage extends StatelessWidget {
                     style: const TextStyle(color: Colors.white),
                   ),
                 ),
-
                 Center(child: Text('Grafico Bonus/Malus', style: TextStyle(fontSize: 20, color: Colors.amber))),
                 SingleChildScrollView(
                   scrollDirection: Axis.horizontal,
                   child: SizedBox(
-                    width: vm.bonusMalusChartData.length * 40.0,
+                    width: vm.bonusMalusAggregati.length * 40.0,
                     child: SfCartesianChart(
                       backgroundColor: Colors.black,
                       primaryXAxis: NumericAxis(
@@ -60,23 +57,26 @@ class PlayerDetailPage extends StatelessWidget {
                         enableMouseWheelZooming: true,
                         enablePinching: true,
                       ),
-                      primaryYAxis: NumericAxis(labelStyle: TextStyle(color: Colors.white)),
+                      primaryYAxis: NumericAxis(
+                        labelStyle: TextStyle(color: Colors.white),
+                        minimum: -10, // puoi adattare in base ai dati
+                      ),
                       legend: const Legend(isVisible: true, textStyle: TextStyle(color: Colors.white)),
                       tooltipBehavior: TooltipBehavior(enable: true),
-                      series: <CartesianSeries<ChartEntry, int>>[
-                        ColumnSeries<ChartEntry, int>(
-                          dataSource: vm.bonusMalusChartData.where((e) => e.gf != 0).toList(),
+                      series: <CartesianSeries<ChartEntryBonusMalus, int>>[
+                        ColumnSeries<ChartEntryBonusMalus, int>(
+                          dataSource: vm.bonusMalusAggregati,
                           xValueMapper: (e, _) => e.giornata,
-                          yValueMapper: (e, _) => e.gf,
-                          name: 'GF',
-                          color: Colors.amber,
+                          yValueMapper: (e, _) => e.bonus,
+                          name: 'Bonus',
+                          color: Colors.green,
                           enableTooltip: true,
                         ),
-                        ColumnSeries<ChartEntry, int>(
-                          dataSource: vm.bonusMalusChartData.where((e) => e.gs != 0).toList(),
+                        ColumnSeries<ChartEntryBonusMalus, int>(
+                          dataSource: vm.bonusMalusAggregati,
                           xValueMapper: (e, _) => e.giornata,
-                          yValueMapper: (e, _) => e.gs,
-                          name: 'GS',
+                          yValueMapper: (e, _) => e.malus,
+                          name: 'Malus',
                           color: Colors.red,
                           enableTooltip: true,
                         ),
@@ -84,7 +84,6 @@ class PlayerDetailPage extends StatelessWidget {
                     ),
                   ),
                 ),
-
 
                 const SizedBox(height: 16),
                 Center(child: Text('Grafico Fantavoti', style: TextStyle(fontSize: 20, color: Colors.amber))),

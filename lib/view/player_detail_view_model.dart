@@ -66,6 +66,46 @@ class PlayerDetailViewModel extends ChangeNotifier {
     }
     return list;
   }
+  List<ChartEntryBonusMalus> get bonusMalusAggregati {
+    final List<ChartEntryBonusMalus> list = [];
+
+    for (int i = 0; i < player.statsGrid!.length; i++) {
+      final stats = player.statsGrid?[i];
+
+      double bonus = 0;
+      double malus = 0;
+
+      // Bonus
+      bonus += (stats?['GF'] ?? 0) * 3;
+      bonus += (stats?['Ass'] ?? 0) * 1;
+      bonus += (stats?['RigP'] ?? 0) * 3;
+      if (player.position == 'P' && (stats?['GS'] ?? 0) == 0) {
+        bonus += 1;
+      }
+
+      // Malus
+      malus += (stats?['Amm'] ?? 0) * 0.5;
+      malus += (stats?['Esp'] ?? 0) * 1;
+      malus += (stats?['Aut'] ?? 0) * 3;
+      if (player.position == 'P') {
+        malus += (stats?['GS'] ?? 0) * 1;
+      }
+
+      // Inserisci solo se almeno uno non è 0
+      if (bonus != 0 || malus != 0) {
+        list.add(ChartEntryBonusMalus(giornata: i + 1, bonus: bonus, malus: -malus));
+      }
+    }
+
+    return list;
+  }
+}
+class ChartEntryBonusMalus {
+  final int giornata;
+  final double bonus;
+  final double malus;
+
+  ChartEntryBonusMalus({required this.giornata, required this.bonus, required this.malus});
 }
 
 class ChartEntry {
@@ -82,4 +122,5 @@ class ChartEntry {
     this.vc,
     this.vts,
   });
+  
 }
