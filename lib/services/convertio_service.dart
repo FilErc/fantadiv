@@ -92,7 +92,6 @@ class ConvertioService {
           });
 
           if (isAllCaps && i + 2 < rows.length) {
-            final nome = row.map((c) => c?.value?.toString() ?? '').join(' ').trim();
 
             final secondaRiga = rows[i + 1]
                 .map((c) => c?.value?.toString().trim() ?? '')
@@ -104,14 +103,16 @@ class ConvertioService {
                 .join(' ')
                 .split(RegExp(r'\s+'));
 
-            // Inserisce il nome completo tra codice e ruolo
-            final codice = secondaRiga.isNotEmpty ? secondaRiga[0] : '??';
-            final ruoli = secondaRiga.sublist(1, 3); // es: P P o D D
-            final team = secondaRiga.length > 3 ? secondaRiga[3] : '??';
-            final valori = secondaRiga.sublist(4) + terzaRiga;
+            final nome = row.map((c) => c?.value?.toString() ?? '').join(' ').trim();
+            final nomeConTerzaRiga = '$nome ${terzaRiga.join(' ')}';
 
-            final finalList = [codice, ...nome.split(' '), ...ruoli, team, ...valori];
-            final colonSeparated = finalList.map((e) => e.trim()).join(':');
+            final codice = secondaRiga.isNotEmpty ? secondaRiga[0] : '??';
+            final ruoli = secondaRiga.sublist(1, 3);
+            final team = secondaRiga.length > 3 ? secondaRiga[3] : '??';
+            final valori = secondaRiga.sublist(4);
+
+            final finalList = [codice, ...nomeConTerzaRiga.split(' '), ...ruoli, team, ...valori];
+            final colonSeparated = finalList.map((e) => e.trim()).join(' ');
             sheet.appendRow([TextCellValue(colonSeparated)]);
             i += 3;
           } else {

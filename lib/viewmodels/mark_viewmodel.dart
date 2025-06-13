@@ -43,7 +43,6 @@ class MarkViewModel extends ChangeNotifier {
         for (int i = 0; i < rows.length; i++) {
           final row = rows[i];
           final values = row.map((e) => e?.value.toString().trim() ?? '').toList();
-          print(values);
           if (values.isEmpty) continue;
 
           final rawValue = values[0].split(" ");
@@ -53,10 +52,8 @@ class MarkViewModel extends ChangeNotifier {
           final result = extractNameAndTeam(values[0]);
           final name = result['name']!;
           final team = result['team']!;
-          final index = int.tryParse(result['index']!);
 
           Players? player = _findPlayer(name, team);
-          print(player?.alias);
 
           if (player == null) {
             _shouldPause = true;
@@ -68,28 +65,34 @@ class MarkViewModel extends ChangeNotifier {
 
           final giornataIndex = _currentGiornata - 1;
           final lastIndex = rawValue.length - 1;
-          final vg = double.tryParse(rawValue[lastIndex].replaceAll(',', '.')) ?? 0.0;
+
+          final vts = double.tryParse(rawValue[lastIndex - 0].replaceAll(',', '.')) ?? 0.0;
           final vc = double.tryParse(rawValue[lastIndex - 1].replaceAll(',', '.')) ?? 0.0;
-          final vts = double.tryParse(rawValue[lastIndex - 2].replaceAll(',', '.')) ?? 0.0;
+          final vg = double.tryParse(rawValue[lastIndex - 2].replaceAll(',', '.')) ?? 0.0;
+          final rigP = int.tryParse(rawValue[lastIndex - 6]) ?? 0;
+          final rigS = int.tryParse(rawValue[lastIndex - 7]) ?? 0;
+          final esp = int.tryParse(rawValue[lastIndex - 10]) ?? 0;
+          final amm = int.tryParse(rawValue[lastIndex - 11]) ?? 0;
+          final ass = int.tryParse(rawValue[lastIndex - 14]) ?? 0;
+          final aut = int.tryParse(rawValue[lastIndex - 15]) ?? 0;
+          final gs = int.tryParse(rawValue[lastIndex - 16]) ?? 0;
+          final gf = int.tryParse(rawValue[lastIndex - 17]) ?? 0;
+
           player.statsGrid ??= List.generate(38, (_) => {});
           player.statsGrid![giornataIndex] = {
-            'GF': int.tryParse(rawValue[index! + 1]) ?? 0,
-            'GS': int.tryParse(rawValue[index + 2]) ?? 0,
-            'Aut': int.tryParse(rawValue[index + 3]) ?? 0,
-            'Ass': int.tryParse(rawValue[index + 4]) ?? 0,
-            'Amm': int.tryParse(rawValue[index + 13]) ?? 0,
-            'Esp': int.tryParse(rawValue[index + 14]) ?? 0,
-            'Gdv': int.tryParse(rawValue[index + 15]) ?? 0,
-            'Gdp': int.tryParse(rawValue[index + 16]) ?? 0,
-            'RigS': int.tryParse(rawValue[index + 17]) ?? 0,
-            'RigP': int.tryParse(rawValue[index + 18]) ?? 0,
-            'Rt': int.tryParse(rawValue[index + 19]) ?? 0,
-            'Rs': int.tryParse(rawValue[index + 20]) ?? 0,
-            'T': int.tryParse(rawValue[index + 21]) ?? 0,
+            'GF': gf,
+            'GS': gs,
+            'Aut': aut,
+            'Ass': ass,
+            'Amm': amm,
+            'Esp': esp,
+            'RigS': rigS,
+            'RigP': rigP,
             'VG': vg,
             'VC': vc,
             'VTS': vts,
           };
+
           while (_shouldPause) {
             await Future.delayed(const Duration(milliseconds: 100));
           }

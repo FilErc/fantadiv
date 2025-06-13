@@ -185,18 +185,20 @@ class FirebaseUtilStorage {
   }
   Future<void> storePlayers(List<String> line) async {
     if (line.isNotEmpty && int.tryParse(line[0]) != null) {
-      DocumentReference newDocRef = _firestore.collection('players').doc(line[0]);
+      final playerId = line[3].replaceAll(' ', '_').toLowerCase();
+      DocumentReference docRef = _firestore.collection('players').doc(playerId);
 
-      Players players = Players(
+      Players player = Players(
         name: line[3],
         position: line[1], // 'A', 'C', 'D', 'P'
         team: line[4],
         alias: [],
       );
 
-      await newDocRef.set(players.toMap());
+      await docRef.set(player.toMap(), SetOptions(merge: true));
     }
   }
+
 
   Future<Map<String, List<Players>>> loadPlayers() async {
     QuerySnapshot snapshot = await _firestore.collection('players').get();
@@ -226,7 +228,6 @@ class FirebaseUtilStorage {
 
     for (final player in players) {
       if (operationCount >= 500) {
-        // Aggiungi la batch corrente alla lista e inizia una nuova batch
         batches.add(currentBatch);
         currentBatch = _firestore.batch();
         operationCount = 0;
@@ -239,10 +240,8 @@ class FirebaseUtilStorage {
       operationCount++;
     }
 
-    // Aggiungi l'ultima batch
     batches.add(currentBatch);
 
-    // Esegui ogni batch in una sola chiamata
     for (final batch in batches) {
       try {
         await batch.commit();
@@ -254,4 +253,5 @@ class FirebaseUtilStorage {
 
     print("✅ Tutti i giocatori salvati su Firestore.");
   }
+
 }
