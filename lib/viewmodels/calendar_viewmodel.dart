@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../db/firebase_util_storage.dart';
-import '../../models/calendar.dart';
+import '../../models/match.dart';
+import '../models/round.dart';
 
 class CalendarViewModel extends ChangeNotifier {
   final FirebaseUtilStorage _storage = FirebaseUtilStorage();
@@ -8,7 +9,7 @@ class CalendarViewModel extends ChangeNotifier {
   final List<String> _players = [];
   final List<Round> _schedule = [];
   List<String> _availablePlayers = [];
-  int selectedNumMatches = 38; // Impostiamo un numero di partite di default
+  int selectedNumMatches = 38;
   bool _showAlternativeView = false;
 
   bool get showAlternativeView => _showAlternativeView;
@@ -39,12 +40,11 @@ class CalendarViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  // Nuova funzione per aggiornare il numero di partite da generare
   void setSelectedNumMatches(int numMatches) {
     selectedNumMatches = numMatches;
     notifyListeners();
   }
-  // Genera i match del primo girone
+
   void generateSchedule() {
     _players.shuffle();
     List<Match> matches = [];
@@ -55,7 +55,7 @@ class CalendarViewModel extends ChangeNotifier {
     }
     generateRounds(matches);
   }
-  // Crea tutte le giornate
+
   void generateRounds(List<Match> matches){
     for (int i = 0; i < (_players.length-1); i++){
       List<Match> matchForDay = [];
@@ -70,7 +70,7 @@ class CalendarViewModel extends ChangeNotifier {
     }
     saveCalendar();
   }
-  // Controlla la se una squadra X è già stata scelta per quel round
+
   bool matchAlreadyChoosen(List<Match> matches, Match match){
     for (Match c in matches){
       if (c.team1 == match.team1 || c.team2 == match.team2 || c.team2 == match.team1 || c.team1 == match.team2){
@@ -79,26 +79,11 @@ class CalendarViewModel extends ChangeNotifier {
     }
     return false;
   }
-  //Salva il primo girone (La chiamata avviene per singolo round)
-  void saveFirstGirone(int i,List<Match> listOfMatch)
-  {
-    //CREARE IL DOCUMENTREFERENCE PER OGNI SINGOLO MATCH
-    //CREARE IL DOCUMENTREFERENCE PER OGNI SINGOLO MATCH
-    //CREARE IL DOCUMENTREFERENCE PER OGNI SINGOLO MATCH
-    //CREARE IL DOCUMENTREFERENCE PER OGNI SINGOLO MATCH
-    //CREARE IL DOCUMENTREFERENCE PER OGNI SINGOLO MATCH
-    //CREARE IL DOCUMENTREFERENCE PER OGNI SINGOLO MATCH
-    //CREARE IL DOCUMENTREFERENCE PER OGNI SINGOLO MATCH
+
+  void saveFirstGirone(int i,List<Match> listOfMatch) {
     _storage.saveRound(i,listOfMatch);
   }
   void saveCalendar(){
-    //CREARE IL DOCUMENTREFERENCE PER OGNI SINGOLO MATCH
-    //CREARE IL DOCUMENTREFERENCE PER OGNI SINGOLO MATCH
-    //CREARE IL DOCUMENTREFERENCE PER OGNI SINGOLO MATCH
-    //CREARE IL DOCUMENTREFERENCE PER OGNI SINGOLO MATCH
-    //CREARE IL DOCUMENTREFERENCE PER OGNI SINGOLO MATCH
-    //CREARE IL DOCUMENTREFERENCE PER OGNI SINGOLO MATCH
-    //CREARE IL DOCUMENTREFERENCE PER OGNI SINGOLO MATCH
     _storage.saveCalendar(selectedNumMatches);
   }
 }

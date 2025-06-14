@@ -3,7 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 import '../db/firebase_util_storage.dart';
-import '../models/calendar.dart';
+import '../models/round.dart';
 
 class HomeViewModel extends ChangeNotifier {
   final FirebaseUtilStorage _storage = FirebaseUtilStorage();
@@ -66,5 +66,30 @@ class HomeViewModel extends ChangeNotifier {
     if (!_isDisposed) {
       notifyListeners();
     }
+  }
+
+  int get firstIncompleteIndex {
+    return allRounds.indexWhere((r) => r.boolean == false);
+  }
+
+  Round? get firstIncompleteRound {
+    final index = firstIncompleteIndex;
+    return index != -1 ? allRounds[index] : null;
+  }
+
+  String getCountdownToFirstIncomplete() {
+    final round = firstIncompleteRound;
+    if (round == null || round.timestamp == null) return "Nessuna data disponibile";
+
+    final now = DateTime.now();
+    final diff = round.timestamp!.difference(now);
+
+    if (diff.isNegative) return "In corso o già passato";
+
+    final days = diff.inDays;
+    final hours = diff.inHours % 24;
+    final minutes = diff.inMinutes % 60;
+
+    return "$days giorni, $hours ore, $minutes minuti rimanenti";
   }
 }

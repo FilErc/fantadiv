@@ -15,7 +15,6 @@ class Squad {
     this.reference,
   });
 
-  /// Converte un oggetto Squad in una mappa per Firestore
   Map<String, dynamic> toMap() {
     return {
       'teamName': teamName,
@@ -25,7 +24,6 @@ class Squad {
     };
   }
 
-  /// Crea un oggetto Squad da un documento Firestore
   factory Squad.fromDocument(DocumentSnapshot doc) {
     final data = doc.data() as Map<String, dynamic>;
 
@@ -36,7 +34,7 @@ class Squad {
       createdAt: (data['createdAt'] as Timestamp).toDate(),
       reference: data['reference'] != null
           ? (data['reference'] as List).map((path) => FirebaseFirestore.instance.doc(path)).toList()
-          : null, // 🔥 Se esiste, converte i path in DocumentReference, altrimenti null
+          : null,
     );
   }
 }

@@ -1,14 +1,14 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../models/players.dart';
+import '../models/round.dart';
 import '../models/squad.dart';
-import '../models/calendar.dart';
+import '../models/match.dart';
 
 class FirebaseUtilStorage {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
-  /// **Controlla se l'utente ha una squadra**
   Future<bool> hasTeam() async {
     final String? email = _auth.currentUser?.email;
     if (email == null) return false;
@@ -20,7 +20,7 @@ class FirebaseUtilStorage {
 
     return query.docs.isNotEmpty;
   }
-  /// Controlla se l'utente ha una squadra
+
   Future<Squad?> getUserTeam() async {
     final String? email = _auth.currentUser?.email;
     if (email == null) return null;
@@ -34,7 +34,6 @@ class FirebaseUtilStorage {
     return Squad.fromDocument(query.docs.first);
   }
 
-  /// Crea una nuova squadra nel database
   Future<void> createTeam(String teamName) async {
     final String? email = _auth.currentUser?.email;
     if (email == null) return;
@@ -45,20 +44,18 @@ class FirebaseUtilStorage {
       teamName: teamName,
       owner: email,
       createdAt: DateTime.now(),
-      reference: [], // 🔥 Inizialmente la lista è vuota
+      reference: [],
     );
 
     await newDocRef.set(squad.toMap());
   }
 
-  /// Modifica il nome della squadra
   Future<void> updateTeamName(String teamId, String newName) async {
     await _firestore.collection('squad').doc(teamId).update({
       'teamName': newName,
     });
   }
 
-  /// Reset della password
   Future<void> resetPassword() async {
     final String? email = _auth.currentUser?.email;
     if (email != null) {
@@ -66,20 +63,16 @@ class FirebaseUtilStorage {
     }
   }
 
-  /// Recupera tutti i nomi delle squadre
   Future<List<String>> getSquads() async {
     try {
-      // Esegui una query per recuperare tutte le squadre
       QuerySnapshot querySnapshot = await _firestore.collection('squad').get();
 
-      // Mappa i risultati per ottenere solo i nomi delle squadre
       List<String> squadNames = querySnapshot.docs
           .map((doc) => doc['teamName'] as String)
           .toList();
 
       return squadNames;
     } catch (e) {
-      // Gestisci eventuali errori
       print('Errore durante il recupero delle squadre: $e');
       return [];
     }
@@ -96,7 +89,7 @@ class FirebaseUtilStorage {
       }).toList(),
     });
   }
-  // crea tutto il calendario
+
   Future<void> saveCalendar(int selectedNumMatches) async {
     try {
       QuerySnapshot querySnapshot = await _firestore.collection('rounds').get();
@@ -130,13 +123,21 @@ class FirebaseUtilStorage {
       int c=0;
       do{
         await _firestore.collection('rounds').doc().set({
-          'day': i+1,
+          'day': i + 1,
           'matches': roundsList[c].matches.map((match) {
             return {
               'team1': match.team1,
               'team2': match.team2,
+              'gT1': match.gT1,
+              'gT2': match.gT2,
+              'sT1': match.sT1,
+              'sT2': match.sT2,
+              'pT1': match.pT1.map((p) => p.toMap()).toList() ?? [],
+              'pT2': match.pT2.map((p) => p.toMap()).toList() ?? [],
             };
           }).toList(),
+          'timestamp': DateTime(2030, 3, 15, 10, 30),
+          'boolean': false,
         });
         c++;
         if(c== roundsList.length){
@@ -148,7 +149,7 @@ class FirebaseUtilStorage {
       print("Error nella creazione del calendario$e");
     }
   }
-  /// Recupera tutto il rounds(calendario)
+
   Future<List<Round>> getAllRounds() async {
     try {
       QuerySnapshot querySnapshot = await _firestore.collection('rounds').get();
@@ -183,6 +184,7 @@ class FirebaseUtilStorage {
       return [];
     }
   }
+
   Future<void> storePlayers(List<String> line) async {
     if (line.isNotEmpty && int.tryParse(line[0]) != null) {
       final playerId = line[3].replaceAll(' ', '_').toLowerCase();
@@ -190,7 +192,7 @@ class FirebaseUtilStorage {
 
       Players player = Players(
         name: line[3],
-        position: line[1], // 'A', 'C', 'D', 'P'
+        position: line[1],
         team: line[4],
         alias: [],
       );

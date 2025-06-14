@@ -4,8 +4,8 @@ import 'package:provider/provider.dart';
 import '../../viewmodels/file_picker_viewmodel.dart';
 import '../../models/players.dart';
 
-class AlternativeView extends StatelessWidget {
-  const AlternativeView({super.key});
+class ListoneView extends StatelessWidget {
+  const ListoneView({super.key});
 
   @override
   Widget build(BuildContext context) {

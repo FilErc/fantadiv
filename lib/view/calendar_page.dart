@@ -1,137 +1,140 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import '../../viewmodels/calendar_viewmodel.dart';
-import '../viewmodels/file_picker_viewmodel.dart';
-import '../viewmodels/home_viewmodel.dart';
-import 'alternative_view.dart';
-import 'mark_view.dart';
-import 'original_page.dart';
 
-class CalendarPage extends StatefulWidget {
-  const CalendarPage({super.key});
+class CalendarView extends StatelessWidget {
+  final CalendarViewModel viewModel;
 
-  @override
-  State<CalendarPage> createState() => _CalendarPageState();
-}
-
-class _CalendarPageState extends State<CalendarPage> {
-  Widget? selectedPage;
-
-  final List<_PageConfig> pages = [
-    _PageConfig(title: 'Generatore Manuale', builder: (context) => const ManualViewWrapper()),
-    _PageConfig(title: 'Visualizza listone', builder: (context) => const AlternativeViewWrapper()),
-    _PageConfig(title: 'Importa i voti', builder: (context) => const MarksGetterViewWrapper()),
-    // Aggiungi qui nuove pagine:
-    // _PageConfig(title: 'NomePagina', builder: (context) => NomeView()),
-  ];
+  const CalendarView({super.key, required this.viewModel});
 
   @override
   Widget build(BuildContext context) {
-    final isAdmin = context.watch<HomeViewModel>().isAdmin;
-
-    // Mostra solo "Visualizza listone" per i non-admin
-    final visiblePages = pages.where((page) {
-      if (page.title == 'Visualizza listone') return true;
-      return isAdmin;
-    }).toList();
-
     return Scaffold(
       backgroundColor: Colors.black,
-      body: selectedPage == null
-          ? _buildPageSelector(visiblePages)
-          : selectedPage!,
+      appBar: AppBar(
+        backgroundColor: Colors.amber,
+        foregroundColor: Colors.black,
+        title: const Text("Generatore Calendario"),
+        centerTitle: true,
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          children: [
+            _buildSectionTitle("1. Seleziona 8 squadre"),
+            const SizedBox(height: 10),
+            _buildPlayerGrid(viewModel),
+            const SizedBox(height: 20),
+            _buildSectionTitle("2. Numero giornate"),
+            _buildMatchSlider(viewModel),
+            const SizedBox(height: 10),
+            _buildGenerateButton(viewModel),
+            const SizedBox(height: 20),
+            if (viewModel.schedule.isNotEmpty) Expanded(child: _buildSchedule(viewModel)),
+          ],
+        ),
+      ),
     );
   }
 
-  Widget _buildPageSelector(List<_PageConfig> visiblePages) {
-    return Column(
-      children: visiblePages.map((page) {
-        return Expanded(
-          child: GestureDetector(
-            onTap: () {
-              setState(() {
-                selectedPage = page.builder(context);
-              });
-            },
-            child: Container(
-              margin: const EdgeInsets.all(8.0),
-              decoration: BoxDecoration(
-                color: Colors.grey[850],
-                borderRadius: BorderRadius.circular(16),
-              ),
-              alignment: Alignment.center,
-              child: Text(
-                page.title,
-                style: const TextStyle(color: Colors.amber, fontSize: 24),
-              ),
-            ),
-          ),
+  Widget _buildSectionTitle(String text) {
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: Text(text,
+          style: const TextStyle(fontSize: 18, color: Colors.amber, fontWeight: FontWeight.bold)),
+    );
+  }
+
+  Widget _buildPlayerGrid(CalendarViewModel viewModel) {
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      children: viewModel.availablePlayers.map((player) {
+        final selected = viewModel.players.contains(player);
+        return ChoiceChip(
+          label: Text(player),
+          selected: selected,
+          onSelected: (_) {
+            if (selected) {
+              viewModel.togglePlayerSelection(player, false);
+            } else if (viewModel.players.length < 8) {
+              viewModel.togglePlayerSelection(player, true);
+            }
+          },
+          selectedColor: Colors.amber,
+          backgroundColor: Colors.grey[800],
+          labelStyle: TextStyle(
+              color: selected ? Colors.black : Colors.amber, fontWeight: FontWeight.w500),
         );
       }).toList(),
     );
   }
-}
 
-class _PageConfig {
-  final String title;
-  final WidgetBuilder builder;
+  Widget _buildMatchSlider(CalendarViewModel viewModel) {
+    return Column(
+      children: [
+        Slider(
+          value: viewModel.selectedNumMatches.toDouble(),
+          min: 1,
+          max: 38,
+          divisions: 37,
+          label: "${viewModel.selectedNumMatches} giornate",
+          onChanged: (value) {
+            viewModel.setSelectedNumMatches(value.toInt());
+          },
+          activeColor: Colors.amber,
+          inactiveColor: Colors.grey[700],
+        ),
+        Text(
+          "${viewModel.selectedNumMatches} giornate",
+          style: const TextStyle(color: Colors.amber),
+        ),
+      ],
+    );
+  }
 
-  _PageConfig({required this.title, required this.builder});
-}
+  Widget _buildGenerateButton(CalendarViewModel viewModel) {
+    return SizedBox(
+      width: double.infinity,
+      child: ElevatedButton.icon(
+        icon: const Icon(Icons.calendar_today),
+        label: const Text("Genera Calendario"),
+        onPressed: viewModel.players.length == 8 && viewModel.selectedNumMatches > 0
+            ? viewModel.generateSchedule
+            : null,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Colors.amber,
+          foregroundColor: Colors.black,
+          disabledBackgroundColor: Colors.grey,
+        ),
+      ),
+    );
+  }
 
-// Wrappers per includere i Provider
-
-class ManualViewWrapper extends StatelessWidget {
-  const ManualViewWrapper({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-      create: (_) => CalendarViewModel(),
-      child: Consumer<CalendarViewModel>(
-        builder: (context, viewModel, child) => Scaffold(
-          backgroundColor: Colors.black,
-          appBar: AppBar(
-            title: const Text('Generatore Manuale'),
-            backgroundColor: Colors.grey[900],
+  Widget _buildSchedule(CalendarViewModel viewModel) {
+    return ListView.builder(
+      itemCount: viewModel.schedule.length,
+      itemBuilder: (context, index) {
+        final giornata = viewModel.schedule[index];
+        return Card(
+          color: Colors.grey[900],
+          margin: const EdgeInsets.symmetric(vertical: 8),
+          child: Padding(
+            padding: const EdgeInsets.all(12.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text("Giornata ${giornata.day}",
+                    style: const TextStyle(color: Colors.amber, fontWeight: FontWeight.bold)),
+                const SizedBox(height: 6),
+                ...giornata.matches.map((match) => Text(
+                  "${match.team1} vs ${match.team2}",
+                  style: const TextStyle(color: Colors.white),
+                )),
+              ],
+            ),
           ),
-          body: OriginalView(viewModel: viewModel),
-        ),
-      ),
-    );
-  }
-}
-
-class AlternativeViewWrapper extends StatelessWidget {
-  const AlternativeViewWrapper({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-      create: (_) => FilePickerViewModel(),
-      child: Scaffold(
-        backgroundColor: Colors.black,
-        body: const AlternativeView(),
-      ),
-    );
-  }
-}
-
-class MarksGetterViewWrapper extends StatelessWidget {
-  const MarksGetterViewWrapper({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-      create: (_) => FilePickerViewModel(),
-      child: Scaffold(
-        backgroundColor: Colors.black,
-        appBar: AppBar(
-          title: const Text('Importa i voti'),
-          backgroundColor: Colors.grey[900],
-        ),
-        body: const MarkView(),
-      ),
+        );
+      },
     );
   }
 }

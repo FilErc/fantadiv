@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../viewmodels/home_viewmodel.dart';
 import 'profile_page.dart';
-import 'calendar_page.dart';
+import 'hub_page.dart';
 import 'match_detail_page.dart';
 
 class HomePage extends StatelessWidget {
@@ -25,7 +25,7 @@ class HomePage extends StatelessWidget {
 
           List<Widget> defaultPages = [
             HomeContent(),
-            CalendarPage(),
+            HubPage(),
             ProfilePage(),
           ];
           return Scaffold(
@@ -87,17 +87,31 @@ class HomePage extends StatelessWidget {
   }
 }
 
-class HomeContent extends StatelessWidget {
+class HomeContent extends StatefulWidget {
   const HomeContent({super.key});
+
+  @override
+  State<HomeContent> createState() => _HomeContentState();
+}
+
+class _HomeContentState extends State<HomeContent> {
+  final PageController _pageController = PageController(viewportFraction: 0.7);
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final vm = Provider.of<HomeViewModel>(context, listen: false);
+      final index = vm.firstIncompleteIndex;
+      if (index != -1) {
+        _pageController.jumpToPage(index);
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     final viewModel = Provider.of<HomeViewModel>(context);
-
-    final PageController pageController = PageController(
-      initialPage: 0,
-      viewportFraction: 0.7,
-    );
 
     return Container(
       decoration: const BoxDecoration(
@@ -111,96 +125,113 @@ class HomeContent extends StatelessWidget {
         child: Padding(
           padding: const EdgeInsets.all(20.0),
           child: viewModel.allRounds.isNotEmpty
-              ? PageView.builder(
-            controller: pageController,
-            scrollDirection: Axis.horizontal,
-            physics: const BouncingScrollPhysics(),
-            itemCount: viewModel.allRounds.length,
-            itemBuilder: (context, index) {
-              final round = viewModel.allRounds[index];
-
-              return Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 10),
-                child: Container(
-                  width: 230,
-                  height: 180,
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      Text(
-                        "Giornata ${round.day}",
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 20, // Font più piccolo
-                          fontWeight: FontWeight.bold,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                      const SizedBox(height: 10),
-                      Expanded(
-                        child: ListView.builder(
-                          shrinkWrap: true,
-                          itemCount: round.matches.length,
-                          itemBuilder: (context, matchIndex) {
-                            final match = round.matches[matchIndex];
-
-                            String backgroundImage;
-                            if (match.gT1 < match.gT2) {
-                              backgroundImage = "images/WvL.png";
-                            } else if (match.gT1 > match.gT2) {
-                              backgroundImage = "images/LvW.png";
-                            } else {
-                              backgroundImage = "images/Draw.png";
-                            }
-
-                            return GestureDetector(
-                              onTap: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => MatchDetailsPage(),
-                                  ),
-                                );
-                              },
-                              child: Padding(
-                                padding: const EdgeInsets.only(bottom: 5),
-                                child: Container(
-                                  padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 10),
-                                  decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(8),
-                                    border: Border.all(color: Colors.black, width: 1.5),
-                                    image: DecorationImage(
-                                      image: AssetImage(backgroundImage),
-                                      fit: BoxFit.cover,
-                                    ),
-                                  ),
-                                  child: Center(
-                                    child: Text(
-                                      "${match.team1} vs ${match.team2}",
-                                      style: const TextStyle(
-                                        color: Colors.black,
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.w500,
-                                      ),
-                                      textAlign: TextAlign.center,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            );
-                          },
-                        ),
-                      )
-
-                    ],
-                  ),
+              ? Column(
+            children: [
+              Text(
+                viewModel.getCountdownToFirstIncomplete(),
+                style: const TextStyle(
+                  color: Colors.amber,
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
                 ),
-              );
-            },
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 16),
+              Expanded(
+                child: PageView.builder(
+                  controller: _pageController,
+                  scrollDirection: Axis.horizontal,
+                  physics: const BouncingScrollPhysics(),
+                  itemCount: viewModel.allRounds.length,
+                  itemBuilder: (context, index) {
+                    final round = viewModel.allRounds[index];
+
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 10),
+                      child: Container(
+                        width: 230,
+                        height: 180,
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(10),
+                          color: Colors.grey[850],
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            Text(
+                              "Giornata ${round.day}",
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                            const SizedBox(height: 10),
+                            Expanded(
+                              child: ListView.builder(
+                                shrinkWrap: true,
+                                itemCount: round.matches.length,
+                                itemBuilder: (context, matchIndex) {
+                                  final match = round.matches[matchIndex];
+
+                                  String backgroundImage;
+                                  if (match.gT1 < match.gT2) {
+                                    backgroundImage = "images/WvL.png";
+                                  } else if (match.gT1 > match.gT2) {
+                                    backgroundImage = "images/LvW.png";
+                                  } else {
+                                    backgroundImage = "images/Draw.png";
+                                  }
+
+                                  return GestureDetector(
+                                    onTap: () {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) => MatchDetailsPage(),
+                                        ),
+                                      );
+                                    },
+                                    child: Padding(
+                                      padding: const EdgeInsets.only(bottom: 5),
+                                      child: Container(
+                                        padding: const EdgeInsets.symmetric(
+                                            vertical: 8, horizontal: 10),
+                                        decoration: BoxDecoration(
+                                          borderRadius: BorderRadius.circular(8),
+                                          border: Border.all(color: Colors.black, width: 1.5),
+                                          image: DecorationImage(
+                                            image: AssetImage(backgroundImage),
+                                            fit: BoxFit.cover,
+                                          ),
+                                        ),
+                                        child: Center(
+                                          child: Text(
+                                            "${match.team1} vs ${match.team2}",
+                                            style: const TextStyle(
+                                              color: Colors.black,
+                                              fontSize: 16,
+                                              fontWeight: FontWeight.w500,
+                                            ),
+                                            textAlign: TextAlign.center,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  );
+                                },
+                              ),
+                            )
+                          ],
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ],
           )
               : const Center(
             child: Text(
