@@ -54939,7 +54939,7 @@ return null},
 $S:17}
 A.qo.prototype={
 aA(){var s=t.s
-return new A.a2i(A.a9(["VC",A.b(["\ud83d\udcd8","Voto Corriere dello Sport"],s),"VG",A.b(["\ud83d\udcd7","Voto Gazzetta dello Sport"],s),"VTS",A.b(["\ud83d\udcd2","Voto Tutto Sport"],s),"GF",A.b(["\u26bd","Goal"],s),"Ass",A.b(["\ud83c\udfaf","Assist"],s),"RigTrasf",A.b(["\u2705","Rigore Segnato"],s),"RigSbagliato",A.b(["\u274c","Rigore Sbagliato"],s),"Esp",A.b(["\ud83d\udfe5","Espulsione"],s),"Amm",A.b(["\ud83d\udfe8","Ammonizione"],s),"GS",A.b(["\ud83e\udde4","Goal Subito"],s),"RigP",A.b(["\ud83e\uddf1","Rigore Parato"],s)],t.N,t.yp))}}
+return new A.a2i(A.a9(["VC",A.b(["\ud83d\udcd8","Voto Corriere dello Sport"],s),"VG",A.b(["\ud83d\udcd7","Voto Gazzetta dello Sport"],s),"VTS",A.b(["\ud83d\udcd2","Voto Tutto Sport"],s),"GF",A.b(["\u26bd","Goal"],s),"Ass",A.b(["\ud83c\udfaf","Assist"],s),"RigTrasf",A.b(["\ud83e\udd45","Rigore Segnato"],s),"RigSbagliato",A.b(["\u274c","Rigore Sbagliato"],s),"Esp",A.b(["\ud83d\udfe5","Espulsione"],s),"Amm",A.b(["\ud83d\udfe8","Ammonizione"],s),"GS",A.b(["\u26f3","Goal Subito"],s),"RigP",A.b(["\ud83e\udd4a","Rigore Parato"],s),"Aut",A.b(["\ud83d\udd34","Autogol"],s),"RigS",A.b(["\u26bd","Rigore Segnato"],s)],t.N,t.yp))}}
 A.a2i.prototype={
 V(a){var s=null,r=A.l5(a,!0,t.X7).c,q=t.Pk
 return A.kA(A.le(A.wG(B.X,s,s,B.n,A.c_(this.a.c.a,s,s,s,s,s,s,s)),B.n,A.QL(new A.aGp(this,r),q),s),new A.aGq(this),q)},
