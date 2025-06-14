@@ -15,6 +15,20 @@ class PlayerDetailPage extends StatefulWidget {
 }
 
 class _PlayerDetailPageState extends State<PlayerDetailPage> {
+  final Map<String, List<String>> statIcons = {
+    'VC': ['📘', 'Voto Corriere dello Sport'],
+    'VG': ['📗', 'Voto Gazzetta dello Sport'],
+    'VTS': ['📒', 'Voto Tutto Sport'],
+    'GF': ['⚽', 'Goal'],
+    'Ass': ['🎯', 'Assist'],
+    'RigTrasf': ['✅', 'Rigore Segnato'],
+    'RigSbagliato': ['❌', 'Rigore Sbagliato'],
+    'Esp': ['🟥', 'Espulsione'],
+    'Amm': ['🟨', 'Ammonizione'],
+    'GS': ['🧤', 'Goal Subito'],
+    'RigP': ['🧱', 'Rigore Parato'],
+  };
+
   @override
   Widget build(BuildContext context) {
     final isAdmin = context.watch<HomeViewModel>().isAdmin;
@@ -43,14 +57,20 @@ class _PlayerDetailPageState extends State<PlayerDetailPage> {
                     ),
                   ),
                   const SizedBox(height: 8),
-                  Center(
-                    child: Text(
-                      vm.totalStats.entries.map((e) => '${e.key}=${e.value}').join(', ') +
-                          (vm.fantamedia > 0 ? ' | Fantamedia=${vm.fantamedia.toStringAsFixed(2)}' : ''),
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(color: Colors.white),
-                    ),
+                  Wrap(
+                    alignment: WrapAlignment.center,
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      ...vm.totalStats.entries.map((entry) {
+                        final iconLabel = statIcons[entry.key] ?? ['❔', entry.key];
+                        return _buildStatBox(iconLabel[0], iconLabel[1], entry.value);
+                      }),
+                      if (vm.fantamedia > 0)
+                        _buildStatBox('📊', 'Fantamedia', vm.fantamedia.toStringAsFixed(2)),
+                    ],
                   ),
+
                   const SizedBox(height: 16),
                   Center(child: Text('Grafico Bonus/Malus', style: TextStyle(fontSize: 20, color: Colors.amber))),
                   SfCartesianChart(
@@ -95,6 +115,7 @@ class _PlayerDetailPageState extends State<PlayerDetailPage> {
                       ),
                     ],
                   ),
+
                   const SizedBox(height: 20),
                   Center(child: Text('Grafico Fantavoti', style: TextStyle(fontSize: 20, color: Colors.amber))),
                   SfCartesianChart(
@@ -148,6 +169,7 @@ class _PlayerDetailPageState extends State<PlayerDetailPage> {
                       ),
                     ],
                   ),
+
                   const SizedBox(height: 30),
                   Center(child: Text('Statistiche per Giornata', style: TextStyle(fontSize: 20, color: Colors.amber))),
                   ...List.generate(vm.editableStats.length, (index) {
@@ -165,26 +187,26 @@ class _PlayerDetailPageState extends State<PlayerDetailPage> {
                             Text('Giornata $giornata', style: const TextStyle(color: Colors.amber, fontSize: 16)),
                             const SizedBox(height: 12),
                             _buildStatsRow([
-                              _buildStatBox('📘', 'Voto Corriere dello Sport', stats['VC'], isAdmin: isAdmin, onChanged: (v) => vm.editableStats[index]['VC'] = int.tryParse(v) ?? 0),
-                              _buildStatBox('📗', 'Voto Gazzetta dello Sport', stats['VG'], isAdmin: isAdmin, onChanged: (v) => vm.editableStats[index]['VG'] = int.tryParse(v) ?? 0),
-                              _buildStatBox('📒', 'Voto Tutto Sport', stats['VTS'], isAdmin: isAdmin, onChanged: (v) => vm.editableStats[index]['VTS'] = int.tryParse(v) ?? 0),
+                              _buildFromStatKey('VC', stats['VC'], isAdmin, (v) => vm.editableStats[index]['VC'] = int.tryParse(v) ?? 0),
+                              _buildFromStatKey('VG', stats['VG'], isAdmin, (v) => vm.editableStats[index]['VG'] = int.tryParse(v) ?? 0),
+                              _buildFromStatKey('VTS', stats['VTS'], isAdmin, (v) => vm.editableStats[index]['VTS'] = int.tryParse(v) ?? 0),
                             ]),
                             const SizedBox(height: 8),
                             _buildStatsRow([
-                              _buildStatBox('⚽', 'Goal', stats['GF'], isAdmin: isAdmin, onChanged: (v) => vm.editableStats[index]['GF'] = int.tryParse(v) ?? 0),
-                              _buildStatBox('🎯', 'Assist', stats['Ass'], isAdmin: isAdmin, onChanged: (v) => vm.editableStats[index]['Ass'] = int.tryParse(v) ?? 0),
-                              _buildStatBox('✅', 'Rigore Segnato', stats['RigTrasf'], isAdmin: isAdmin, onChanged: (v) => vm.editableStats[index]['RigTrasf'] = int.tryParse(v) ?? 0),
-                              _buildStatBox('❌', 'Rigore Sbagliato', stats['RigSbagliato'], isAdmin: isAdmin, onChanged: (v) => vm.editableStats[index]['RigSbagliato'] = int.tryParse(v) ?? 0),
+                              _buildFromStatKey('GF', stats['GF'], isAdmin, (v) => vm.editableStats[index]['GF'] = int.tryParse(v) ?? 0),
+                              _buildFromStatKey('Ass', stats['Ass'], isAdmin, (v) => vm.editableStats[index]['Ass'] = int.tryParse(v) ?? 0),
+                              _buildFromStatKey('RigTrasf', stats['RigTrasf'], isAdmin, (v) => vm.editableStats[index]['RigTrasf'] = int.tryParse(v) ?? 0),
+                              _buildFromStatKey('RigSbagliato', stats['RigSbagliato'], isAdmin, (v) => vm.editableStats[index]['RigSbagliato'] = int.tryParse(v) ?? 0),
                             ]),
                             const SizedBox(height: 8),
                             _buildStatsRow([
-                              _buildStatBox('🟥', 'Espulsione', stats['Esp'], isAdmin: isAdmin, onChanged: (v) => vm.editableStats[index]['Esp'] = int.tryParse(v) ?? 0),
-                              _buildStatBox('🟨', 'Ammonizione', stats['Amm'], isAdmin: isAdmin, onChanged: (v) => vm.editableStats[index]['Amm'] = int.tryParse(v) ?? 0),
+                              _buildFromStatKey('Esp', stats['Esp'], isAdmin, (v) => vm.editableStats[index]['Esp'] = int.tryParse(v) ?? 0),
+                              _buildFromStatKey('Amm', stats['Amm'], isAdmin, (v) => vm.editableStats[index]['Amm'] = int.tryParse(v) ?? 0),
                             ]),
                             const SizedBox(height: 8),
                             _buildStatsRow([
-                              _buildStatBox('🧤', 'Goal Subito', stats['GS'], isAdmin: isAdmin, onChanged: (v) => vm.editableStats[index]['GS'] = int.tryParse(v) ?? 0),
-                              _buildStatBox('🎯', 'Rigore Parato', stats['RigP'], isAdmin: isAdmin, onChanged: (v) => vm.editableStats[index]['RigP'] = int.tryParse(v) ?? 0),
+                              _buildFromStatKey('GS', stats['GS'], isAdmin, (v) => vm.editableStats[index]['GS'] = int.tryParse(v) ?? 0),
+                              _buildFromStatKey('RigP', stats['RigP'], isAdmin, (v) => vm.editableStats[index]['RigP'] = int.tryParse(v) ?? 0),
                             ]),
                           ],
                         ),
@@ -213,6 +235,11 @@ class _PlayerDetailPageState extends State<PlayerDetailPage> {
         ),
       ),
     );
+  }
+
+  Widget _buildFromStatKey(String key, dynamic value, bool isAdmin, Function(String) onChanged) {
+    final entry = statIcons[key] ?? ['❔', key];
+    return _buildStatBox(entry[0], entry[1], value, isAdmin: isAdmin, onChanged: onChanged);
   }
 
   Widget _buildStatsRow(List<Widget> children) {
