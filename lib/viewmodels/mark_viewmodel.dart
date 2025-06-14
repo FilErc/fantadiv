@@ -6,7 +6,7 @@ import '../db/firebase_util_storage.dart';
 import '../models/players.dart';
 
 class MarkViewModel extends ChangeNotifier {
-  int _currentGiornata = 1;
+  int _currentGiornata = 34;
   bool isLoading = false;
   final FirebaseUtilStorage _storage = FirebaseUtilStorage();
   final FilePickerViewModel _filepicker;

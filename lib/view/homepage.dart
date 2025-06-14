@@ -65,22 +65,18 @@ class HomePage extends StatelessWidget {
         label: '',
       ),
       const BottomNavigationBarItem(
-        icon: Icon(Icons.person, size: 28),
+        icon: Icon(Icons.calendar_view_day, size: 28),
         label: '',
       ),
-    ];
-
-    List<BottomNavigationBarItem> adminItems = [
-      ...userItems,
       const BottomNavigationBarItem(
-        icon: Icon(Icons.calendar_view_day, size: 28),
+        icon: Icon(Icons.person, size: 28),
         label: '',
       ),
     ];
 
     return BottomNavigationBar(
       type: BottomNavigationBarType.fixed,
-      items: viewModel.isAdmin ? adminItems : userItems,
+      items: userItems,
       currentIndex: viewModel.selectedIndex,
       selectedItemColor: Colors.black,
       unselectedItemColor: Colors.grey[600],
@@ -124,9 +120,9 @@ class HomeContent extends StatelessWidget {
               return Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 10),
                 child: Container(
-                  width: 230, // Larghezza più compatta
-                  height: 180, // Altezza più contenuta
-                  padding: const EdgeInsets.all(12), // Meno padding
+                  width: 230,
+                  height: 180,
+                  padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(10),
                   ),
@@ -142,7 +138,7 @@ class HomeContent extends StatelessWidget {
                         ),
                         textAlign: TextAlign.center,
                       ),
-                      const SizedBox(height: 10), // Ridotto lo spazio
+                      const SizedBox(height: 10),
                       Expanded(
                         child: ListView.builder(
                           shrinkWrap: true,
@@ -185,7 +181,7 @@ class HomeContent extends StatelessWidget {
                                       "${match.team1} vs ${match.team2}",
                                       style: const TextStyle(
                                         color: Colors.black,
-                                        fontSize: 16, // Font ridotto
+                                        fontSize: 16,
                                         fontWeight: FontWeight.w500,
                                       ),
                                       textAlign: TextAlign.center,
