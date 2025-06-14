@@ -1,4 +1,3 @@
-import 'dart:typed_data';
 import 'package:flutter/foundation.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:excel/excel.dart';
@@ -67,7 +66,7 @@ class FilePickerViewModel extends ChangeNotifier {
         bytes = await file.readAsBytes();
       }
 
-      final excel = Excel.decodeBytes(bytes!);
+      final excel = Excel.decodeBytes(bytes);
 
       const allowedSheets = {'Attaccanti', 'Centrocampisti', 'Difensori', 'Portieri'};
 

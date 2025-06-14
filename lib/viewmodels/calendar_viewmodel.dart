@@ -5,8 +5,8 @@ import '../../models/calendar.dart';
 class CalendarViewModel extends ChangeNotifier {
   final FirebaseUtilStorage _storage = FirebaseUtilStorage();
 
-  List<String> _players = [];
-  List<Round> _schedule = [];
+  final List<String> _players = [];
+  final List<Round> _schedule = [];
   List<String> _availablePlayers = [];
   int selectedNumMatches = 38; // Impostiamo un numero di partite di default
   bool _showAlternativeView = false;

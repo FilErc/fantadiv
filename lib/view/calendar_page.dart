@@ -5,7 +5,7 @@ import '../viewmodels/file_picker_viewmodel.dart';
 import '../viewmodels/home_viewmodel.dart';
 import 'alternative_view.dart';
 import 'mark_view.dart';
-import 'original_view.dart';
+import 'original_page.dart';
 
 class CalendarPage extends StatefulWidget {
   const CalendarPage({super.key});

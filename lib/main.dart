@@ -1,4 +1,3 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:fantadiv/viewmodels/calendar_viewmodel.dart';
 import 'package:fantadiv/viewmodels/file_picker_viewmodel.dart';
 import 'package:fantadiv/viewmodels/home_viewmodel.dart';
@@ -54,17 +53,6 @@ class MyApp extends StatelessWidget {
       home: Stack(
         children: [
           const AuthWrapper(),
-          Positioned(
-            bottom: 10,
-            right: 10,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-              decoration: BoxDecoration(
-                color: Colors.black.withOpacity(0.6),
-                borderRadius: BorderRadius.circular(8),
-              ),
-            ),
-          ),
         ],
       ),
     );

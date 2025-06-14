@@ -3,7 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:syncfusion_flutter_charts/charts.dart';
 import '../../models/players.dart';
 import '../viewmodels/home_viewmodel.dart';
-import 'player_detail_view_model.dart';
+import '../viewmodels/player_detail_viewmodel.dart';
 
 class PlayerDetailPage extends StatefulWidget {
   final Players player;
@@ -15,10 +15,6 @@ class PlayerDetailPage extends StatefulWidget {
 }
 
 class _PlayerDetailPageState extends State<PlayerDetailPage> {
-  int bonusStartIndex = 0;
-  int votiStartIndex = 0;
-  final int pageSize = 5;
-
   @override
   Widget build(BuildContext context) {
     final isAdmin = context.watch<HomeViewModel>().isAdmin;
@@ -74,28 +70,25 @@ class _PlayerDetailPageState extends State<PlayerDetailPage> {
                       enableMouseWheelZooming: true,
                       enablePinching: true,
                     ),
-                    primaryYAxis: NumericAxis(labelStyle: TextStyle(color: Colors.white),majorGridLines: const MajorGridLines(width: 0),),
+                    primaryYAxis: NumericAxis(
+                      labelStyle: TextStyle(color: Colors.white),
+                      majorGridLines: const MajorGridLines(width: 0),
+                    ),
                     legend: const Legend(isVisible: true, textStyle: TextStyle(color: Colors.white)),
                     tooltipBehavior: TooltipBehavior(enable: true),
                     series: <CartesianSeries<ChartEntryBonusMalus, int>>[
                       ColumnSeries<ChartEntryBonusMalus, int>(
-                        dataSource: List.generate(
-                          vm.bonusMalusAggregati.length,
-                              (i) => vm.bonusMalusAggregati[i],
-                        ),
+                        dataSource: vm.bonusMalusAggregati,
                         xValueMapper: (e, _) => e.giornata,
-                        yValueMapper: (e, _) => e.bonus ?? 0,
+                        yValueMapper: (e, _) => e.bonus,
                         name: 'Bonus',
                         color: Colors.green,
                         enableTooltip: true,
                       ),
                       ColumnSeries<ChartEntryBonusMalus, int>(
-                        dataSource: List.generate(
-                          vm.bonusMalusAggregati.length,
-                              (i) => vm.bonusMalusAggregati[i],
-                        ),
+                        dataSource: vm.bonusMalusAggregati,
                         xValueMapper: (e, _) => e.giornata,
-                        yValueMapper: (e, _) => e.malus ?? 0,
+                        yValueMapper: (e, _) => e.malus,
                         name: 'Malus',
                         color: Colors.red,
                         enableTooltip: true,
@@ -130,7 +123,7 @@ class _PlayerDetailPageState extends State<PlayerDetailPage> {
                     tooltipBehavior: TooltipBehavior(enable: true),
                     series: <CartesianSeries<ChartEntry, int>>[
                       LineSeries<ChartEntry, int>(
-                        dataSource: List.generate(votiData.length, (i) => votiData[i]),
+                        dataSource: votiData,
                         xValueMapper: (e, _) => e.giornata,
                         yValueMapper: (e, _) => e.vg,
                         name: 'VG',
@@ -138,7 +131,7 @@ class _PlayerDetailPageState extends State<PlayerDetailPage> {
                         enableTooltip: true,
                       ),
                       LineSeries<ChartEntry, int>(
-                        dataSource: List.generate(votiData.length, (i) => votiData[i]),
+                        dataSource: votiData,
                         xValueMapper: (e, _) => e.giornata,
                         yValueMapper: (e, _) => e.vc,
                         name: 'VC',
@@ -146,7 +139,7 @@ class _PlayerDetailPageState extends State<PlayerDetailPage> {
                         enableTooltip: true,
                       ),
                       LineSeries<ChartEntry, int>(
-                        dataSource: List.generate(votiData.length, (i) => votiData[i]),
+                        dataSource: votiData,
                         xValueMapper: (e, _) => e.giornata,
                         yValueMapper: (e, _) => e.vts,
                         name: 'VTS',
@@ -160,49 +153,39 @@ class _PlayerDetailPageState extends State<PlayerDetailPage> {
                   ...List.generate(vm.editableStats.length, (index) {
                     final giornata = index + 1;
                     final stats = vm.editableStats[index];
+
                     return Card(
                       color: Colors.grey[850],
                       margin: const EdgeInsets.symmetric(vertical: 6),
                       child: Padding(
-                        padding: const EdgeInsets.all(8),
+                        padding: const EdgeInsets.all(12),
                         child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
                           children: [
-                            Center(
-                              child: Text('Giornata $giornata', style: TextStyle(color: Colors.amber)),
-                            ),
-                            Wrap(
-                              spacing: 8,
-                              runSpacing: 8,
-                              children: stats.keys.map((key) {
-                                return SizedBox(
-                                  width: 90,
-                                  child: isAdmin
-                                      ? TextFormField(
-                                    initialValue: stats[key]?.toString() ?? '0',
-                                    style: TextStyle(color: Colors.white),
-                                    decoration: InputDecoration(
-                                      labelText: key,
-                                      labelStyle: TextStyle(color: Colors.white70, fontSize: 12),
-                                      enabledBorder: UnderlineInputBorder(
-                                        borderSide: BorderSide(color: Colors.white38),
-                                      ),
-                                    ),
-                                    keyboardType: TextInputType.number,
-                                    onChanged: (value) {
-                                      vm.editableStats[index][key] = int.tryParse(value) ?? 0;
-                                    },
-                                  )
-                                      : Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Text(key, style: TextStyle(color: Colors.white60, fontSize: 12)),
-                                      Text('${stats[key]}', style: TextStyle(color: Colors.white)),
-                                    ],
-                                  ),
-                                );
-                              }).toList(),
-                            ),
+                            Text('Giornata $giornata', style: const TextStyle(color: Colors.amber, fontSize: 16)),
+                            const SizedBox(height: 12),
+                            _buildStatsRow([
+                              _buildStatBox('📘', 'Voto Corriere dello Sport', stats['VC'], isAdmin: isAdmin, onChanged: (v) => vm.editableStats[index]['VC'] = int.tryParse(v) ?? 0),
+                              _buildStatBox('📗', 'Voto Gazzetta dello Sport', stats['VG'], isAdmin: isAdmin, onChanged: (v) => vm.editableStats[index]['VG'] = int.tryParse(v) ?? 0),
+                              _buildStatBox('📒', 'Voto Tutto Sport', stats['VTS'], isAdmin: isAdmin, onChanged: (v) => vm.editableStats[index]['VTS'] = int.tryParse(v) ?? 0),
+                            ]),
+                            const SizedBox(height: 8),
+                            _buildStatsRow([
+                              _buildStatBox('⚽', 'Goal', stats['GF'], isAdmin: isAdmin, onChanged: (v) => vm.editableStats[index]['GF'] = int.tryParse(v) ?? 0),
+                              _buildStatBox('🎯', 'Assist', stats['Ass'], isAdmin: isAdmin, onChanged: (v) => vm.editableStats[index]['Ass'] = int.tryParse(v) ?? 0),
+                              _buildStatBox('✅', 'Rigore Segnato', stats['RigTrasf'], isAdmin: isAdmin, onChanged: (v) => vm.editableStats[index]['RigTrasf'] = int.tryParse(v) ?? 0),
+                              _buildStatBox('❌', 'Rigore Sbagliato', stats['RigSbagliato'], isAdmin: isAdmin, onChanged: (v) => vm.editableStats[index]['RigSbagliato'] = int.tryParse(v) ?? 0),
+                            ]),
+                            const SizedBox(height: 8),
+                            _buildStatsRow([
+                              _buildStatBox('🟥', 'Espulsione', stats['Esp'], isAdmin: isAdmin, onChanged: (v) => vm.editableStats[index]['Esp'] = int.tryParse(v) ?? 0),
+                              _buildStatBox('🟨', 'Ammonizione', stats['Amm'], isAdmin: isAdmin, onChanged: (v) => vm.editableStats[index]['Amm'] = int.tryParse(v) ?? 0),
+                            ]),
+                            const SizedBox(height: 8),
+                            _buildStatsRow([
+                              _buildStatBox('🧤', 'Goal Subito', stats['GS'], isAdmin: isAdmin, onChanged: (v) => vm.editableStats[index]['GS'] = int.tryParse(v) ?? 0),
+                              _buildStatBox('🎯', 'Rigore Parato', stats['RigP'], isAdmin: isAdmin, onChanged: (v) => vm.editableStats[index]['RigP'] = int.tryParse(v) ?? 0),
+                            ]),
                           ],
                         ),
                       ),
@@ -228,6 +211,56 @@ class _PlayerDetailPageState extends State<PlayerDetailPage> {
             );
           },
         ),
+      ),
+    );
+  }
+
+  Widget _buildStatsRow(List<Widget> children) {
+    return Wrap(
+      alignment: WrapAlignment.center,
+      spacing: 8,
+      runSpacing: 8,
+      children: children,
+    );
+  }
+
+  Widget _buildStatBox(String emoji, String label, dynamic value, {bool isAdmin = false, Function(String)? onChanged}) {
+    return Container(
+      width: 110,
+      padding: const EdgeInsets.all(8),
+      decoration: BoxDecoration(
+        color: Colors.grey[700],
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Colors.white24),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(emoji, style: const TextStyle(fontSize: 20)),
+          const SizedBox(height: 4),
+          Text(label, textAlign: TextAlign.center, style: const TextStyle(color: Colors.white, fontSize: 10)),
+          const SizedBox(height: 4),
+          isAdmin
+              ? SizedBox(
+            height: 24,
+            child: TextFormField(
+              initialValue: value?.toString() ?? '0',
+              style: const TextStyle(color: Colors.amber, fontSize: 14),
+              textAlign: TextAlign.center,
+              decoration: const InputDecoration(
+                isDense: true,
+                contentPadding: EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                border: InputBorder.none,
+              ),
+              keyboardType: TextInputType.number,
+              onChanged: onChanged,
+            ),
+          )
+              : Text(
+            value?.toString() ?? '',
+            style: const TextStyle(color: Colors.amber, fontSize: 16, fontWeight: FontWeight.bold),
+          ),
+        ],
       ),
     );
   }

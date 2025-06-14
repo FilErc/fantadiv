@@ -3,7 +3,7 @@ import 'package:provider/provider.dart';
 import '../viewmodels/home_viewmodel.dart';
 import 'profile_page.dart';
 import 'calendar_page.dart';
-import 'MatchDetailsPage.dart';
+import 'match_detail_page.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
@@ -88,6 +88,8 @@ class HomePage extends StatelessWidget {
 }
 
 class HomeContent extends StatelessWidget {
+  const HomeContent({super.key});
+
   @override
   Widget build(BuildContext context) {
     final viewModel = Provider.of<HomeViewModel>(context);

@@ -18,7 +18,7 @@ class MarkView extends StatelessWidget {
 }
 
 class _MarkView extends StatelessWidget {
-  const _MarkView({super.key});
+  const _MarkView();
 
   @override
   Widget build(BuildContext context) {

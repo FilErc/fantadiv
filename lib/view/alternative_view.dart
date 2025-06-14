@@ -71,7 +71,7 @@ class _FilterController extends ChangeNotifier {
 }
 
 class _SearchBar extends StatefulWidget {
-  const _SearchBar({super.key});
+  const _SearchBar();
 
   @override
   State<_SearchBar> createState() => _SearchBarState();
@@ -148,7 +148,7 @@ class _SearchBarState extends State<_SearchBar> {
 }
 
 class _PositionSelector extends StatelessWidget {
-  const _PositionSelector({super.key});
+  const _PositionSelector();
 
   @override
   Widget build(BuildContext context) {
@@ -189,7 +189,7 @@ class _PositionSelector extends StatelessWidget {
 }
 
 class _PositionedPlayerList extends StatelessWidget {
-  const _PositionedPlayerList({super.key});
+  const _PositionedPlayerList();
 
   @override
   Widget build(BuildContext context) {
