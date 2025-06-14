@@ -21,12 +21,14 @@ class _PlayerDetailPageState extends State<PlayerDetailPage> {
     'VTS': ['📒', 'Voto Tutto Sport'],
     'GF': ['⚽', 'Goal'],
     'Ass': ['🎯', 'Assist'],
-    'RigTrasf': ['✅', 'Rigore Segnato'],
+    'RigTrasf': ['🥅', 'Rigore Segnato'],
     'RigSbagliato': ['❌', 'Rigore Sbagliato'],
     'Esp': ['🟥', 'Espulsione'],
     'Amm': ['🟨', 'Ammonizione'],
-    'GS': ['🧤', 'Goal Subito'],
-    'RigP': ['🧱', 'Rigore Parato'],
+    'GS': ['⛳', 'Goal Subito'],
+    'RigP': ['🥊', 'Rigore Parato'],
+    'Aut': ['🔴', 'Autogol'],
+    'RigS': ['⚽', 'Rigore Segnato'],
   };
 
   @override
