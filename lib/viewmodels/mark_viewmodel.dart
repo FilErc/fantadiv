@@ -69,6 +69,8 @@ class MarkViewModel extends ChangeNotifier {
           final vts = double.tryParse(rawValue[lastIndex - 0].replaceAll(',', '.')) ?? 0.0;
           final vc = double.tryParse(rawValue[lastIndex - 1].replaceAll(',', '.')) ?? 0.0;
           final vg = double.tryParse(rawValue[lastIndex - 2].replaceAll(',', '.')) ?? 0.0;
+          final rS = int.tryParse(rawValue[lastIndex - 4]) ?? 0;
+          final rT = int.tryParse(rawValue[lastIndex - 5]) ?? 0;
           final rigP = int.tryParse(rawValue[lastIndex - 6]) ?? 0;
           final rigS = int.tryParse(rawValue[lastIndex - 7]) ?? 0;
           final esp = int.tryParse(rawValue[lastIndex - 10]) ?? 0;
@@ -88,6 +90,8 @@ class MarkViewModel extends ChangeNotifier {
             'Esp': esp,
             'RigS': rigS,
             'RigP': rigP,
+            'RigTrasf':rT,
+            'RigSbagliato':rS,
             'VG': vg,
             'VC': vc,
             'VTS': vts,

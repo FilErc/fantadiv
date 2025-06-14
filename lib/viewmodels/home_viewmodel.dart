@@ -10,21 +10,20 @@ class HomeViewModel extends ChangeNotifier {
   int _selectedIndex = 0;
   bool _isAdmin = false;
   bool _isLoading = true;
-  List<Round> _allRounds = []; // Store fetched calendar data
+  List<Round> _allRounds = [];
 
   int get selectedIndex => _selectedIndex;
   bool get isAdmin => _isAdmin;
   bool get isLoading => _isLoading;
-  List<Round> get allRounds => _allRounds; // Expose data to UI
+  List<Round> get allRounds => _allRounds;
 
-  bool _isDisposed = false; // Added flag to check if the ViewModel is disposed
+  bool _isDisposed = false;
 
   HomeViewModel() {
     checkUserPermissions();
     getCalendar();
   }
 
-  // Ensure that we don't notify listeners after disposal
   @override
   void dispose() {
     _isDisposed = true;

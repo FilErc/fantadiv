@@ -254,4 +254,15 @@ class FirebaseUtilStorage {
     print("✅ Tutti i giocatori salvati su Firestore.");
   }
 
+  Future<void> saveSinglePlayer(Players player) async {
+    try {
+      final playerId = player.name.replaceAll(' ', '_').toLowerCase();
+      final docRef = _firestore.collection('players').doc(playerId);
+      await docRef.set(player.toMap(), SetOptions(merge: true));
+      print("✅ Giocatore '${player.name}' salvato con successo.");
+    } catch (e) {
+      print("❌ Errore durante il salvataggio del giocatore '${player.name}': $e");
+    }
+  }
+
 }

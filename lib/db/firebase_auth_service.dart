@@ -3,7 +3,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 class FirebaseAuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
-  // Metodo per il login con email e password
   Future<User?> signInWithEmailAndPassword(String email, String password) async {
     try {
       UserCredential credential =

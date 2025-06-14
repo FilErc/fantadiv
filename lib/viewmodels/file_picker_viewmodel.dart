@@ -105,7 +105,6 @@ class FilePickerViewModel extends ChangeNotifier {
     try {
       final groupedPlayers = await _storage.loadPlayers();
 
-      // Verifica se c'è almeno un giocatore in almeno una delle liste
       final hasPlayers = groupedPlayers.values.any((list) => list.isNotEmpty);
 
       if (!hasPlayers) {
@@ -115,7 +114,6 @@ class FilePickerViewModel extends ChangeNotifier {
 
       _playersByPosition.clear();
 
-      // Corretto uso di Map<String, List<Players>>
       for (final entry in groupedPlayers.entries) {
         final pos = entry.key;
         final players = entry.value;

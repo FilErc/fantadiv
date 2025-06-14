@@ -1,10 +1,17 @@
 import 'package:flutter/material.dart';
 import '../../models/players.dart';
+import '../db/firebase_util_storage.dart';
 
 class PlayerDetailViewModel extends ChangeNotifier {
   final Players player;
 
-  PlayerDetailViewModel(this.player);
+  List<Map<String, dynamic>> editableStats = [];
+
+  final FirebaseUtilStorage _storage = FirebaseUtilStorage();
+
+  PlayerDetailViewModel(this.player){
+    editableStats = player.statsGrid?.map((e) => Map<String, dynamic>.from(e)).toList() ?? [];
+  }
 
   Map<String, int> get totalStats {
     final totals = <String, int>{};
@@ -12,7 +19,7 @@ class PlayerDetailViewModel extends ChangeNotifier {
 
     for (var entry in player.statsGrid!) {
       entry.forEach((key, value) {
-        if (['GF', 'GS', 'Aut', 'Ass', 'Amm', 'Esp', 'RigS', 'RigP'].contains(key)) {
+        if (['GF', 'GS', 'Aut', 'Ass', 'Amm', 'Esp', 'RigS', 'RigP', 'RigSbagliato' , 'RigTrasf'].contains(key)) {
           final v = (value ?? 0) as int;
           totals[key] = (totals[key] ?? 0) + v;
         }
@@ -57,15 +64,17 @@ class PlayerDetailViewModel extends ChangeNotifier {
       final m = player.statsGrid![i];
       if (m['VG'] != null || m['VC'] != null || m['VTS'] != null) {
         list.add(ChartEntry(
-          giornata: i + 1,
-          vg: m['VG'],
-          vc: m['VC'],
-          vts: m['VTS'],
-        ));
+          giornata: i,
+          vg: (m['VG'] as num?)?.toDouble(),
+          vc: (m['VC'] as num?)?.toDouble(),
+          vts: (m['VTS'] as num?)?.toDouble(),
+        )
+        );
       }
     }
     return list;
   }
+
   List<ChartEntryBonusMalus> get bonusMalusAggregati {
     final List<ChartEntryBonusMalus> list = [];
 
@@ -87,17 +96,19 @@ class PlayerDetailViewModel extends ChangeNotifier {
       malus += (stats?['Amm'] ?? 0) * 0.5;
       malus += (stats?['Esp'] ?? 0) * 1;
       malus += (stats?['Aut'] ?? 0) * 3;
+      malus += (stats?['RigSbagliato'] ?? 0) * 3;
       if (player.position == 'P') {
         malus += (stats?['GS'] ?? 0) * 1;
       }
-
-      // Inserisci solo se almeno uno non è 0
-      if (bonus != 0 || malus != 0) {
-        list.add(ChartEntryBonusMalus(giornata: i + 1, bonus: bonus, malus: -malus));
-      }
+      list.add(ChartEntryBonusMalus(giornata: i + 1, bonus: bonus, malus: -malus));
     }
 
     return list;
+  }
+
+  Future<void> saveEditedStatsToFirestore() async {
+    player.statsGrid = editableStats;
+    await _storage.saveSinglePlayer(player);
   }
 }
 class ChartEntryBonusMalus {
