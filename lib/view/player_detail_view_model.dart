@@ -64,10 +64,18 @@ class PlayerDetailViewModel extends ChangeNotifier {
       final m = player.statsGrid![i];
       if (m['VG'] != null || m['VC'] != null || m['VTS'] != null) {
         list.add(ChartEntry(
-          giornata: i,
+          giornata: i+1,
           vg: (m['VG'] as num?)?.toDouble(),
           vc: (m['VC'] as num?)?.toDouble(),
           vts: (m['VTS'] as num?)?.toDouble(),
+        )
+        );
+      }else{
+        list.add(ChartEntry(
+          giornata: i+1,
+          vg: 0,
+          vc: 0,
+          vts: 0,
         )
         );
       }

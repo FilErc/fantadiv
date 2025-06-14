@@ -25,15 +25,9 @@ class HomePage extends StatelessWidget {
 
           List<Widget> defaultPages = [
             HomeContent(),
-            ProfilePage(),
-          ];
-
-          List<Widget> adminPages = [
-            HomeContent(),
-            ProfilePage(),
             CalendarPage(),
+            ProfilePage(),
           ];
-
           return Scaffold(
             appBar: AppBar(
               title: const Text(
@@ -53,7 +47,7 @@ class HomePage extends StatelessWidget {
                 },
                 child: KeyedSubtree(
                   key: ValueKey<int>(viewModel.selectedIndex),
-                  child: viewModel.isAdmin ? adminPages[viewModel.selectedIndex] : defaultPages[viewModel.selectedIndex],
+                  child: defaultPages[viewModel.selectedIndex],
                 ),
               ),
             ),
@@ -104,7 +98,7 @@ class HomeContent extends StatelessWidget {
 
     final PageController pageController = PageController(
       initialPage: 0,
-      viewportFraction: 0.7, // Mostrare parzialmente gli altri round
+      viewportFraction: 0.7,
     );
 
     return Container(
@@ -156,14 +150,13 @@ class HomeContent extends StatelessWidget {
                           itemBuilder: (context, matchIndex) {
                             final match = round.matches[matchIndex];
 
-                            // Determiniamo l'immagine di sfondo in base al punteggio
                             String backgroundImage;
                             if (match.gT1 < match.gT2) {
-                              backgroundImage = "images/WvL.png"; // Sfondo per x < y
+                              backgroundImage = "images/WvL.png";
                             } else if (match.gT1 > match.gT2) {
-                              backgroundImage = "images/LvW.png"; // Sfondo per y < x
+                              backgroundImage = "images/LvW.png";
                             } else {
-                              backgroundImage = "images/Draw.png"; // Sfondo per x == y
+                              backgroundImage = "images/Draw.png";
                             }
 
                             return GestureDetector(
@@ -171,7 +164,7 @@ class HomeContent extends StatelessWidget {
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (context) => MatchDetailsPage(), // Passa il match se necessario
+                                    builder: (context) => MatchDetailsPage(),
                                   ),
                                 );
                               },
@@ -184,7 +177,7 @@ class HomeContent extends StatelessWidget {
                                     border: Border.all(color: Colors.black, width: 1.5),
                                     image: DecorationImage(
                                       image: AssetImage(backgroundImage),
-                                      fit: BoxFit.cover, // Per coprire l'intero contenitore
+                                      fit: BoxFit.cover,
                                     ),
                                   ),
                                   child: Center(

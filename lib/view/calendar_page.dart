@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../viewmodels/calendar_viewmodel.dart';
 import '../viewmodels/file_picker_viewmodel.dart';
+import '../viewmodels/home_viewmodel.dart';
 import 'alternative_view.dart';
 import 'mark_view.dart';
 import 'original_view.dart';
@@ -18,7 +19,7 @@ class _CalendarPageState extends State<CalendarPage> {
 
   final List<_PageConfig> pages = [
     _PageConfig(title: 'Generatore Manuale', builder: (context) => const ManualViewWrapper()),
-    _PageConfig(title: 'Importa da Excel/Visualizza listone', builder: (context) => const AlternativeViewWrapper()),
+    _PageConfig(title: 'Visualizza listone', builder: (context) => const AlternativeViewWrapper()),
     _PageConfig(title: 'Importa i voti', builder: (context) => const MarksGetterViewWrapper()),
     // Aggiungi qui nuove pagine:
     // _PageConfig(title: 'NomePagina', builder: (context) => NomeView()),
@@ -26,17 +27,25 @@ class _CalendarPageState extends State<CalendarPage> {
 
   @override
   Widget build(BuildContext context) {
+    final isAdmin = context.watch<HomeViewModel>().isAdmin;
+
+    // Mostra solo "Visualizza listone" per i non-admin
+    final visiblePages = pages.where((page) {
+      if (page.title == 'Visualizza listone') return true;
+      return isAdmin;
+    }).toList();
+
     return Scaffold(
       backgroundColor: Colors.black,
       body: selectedPage == null
-          ? _buildPageSelector()
+          ? _buildPageSelector(visiblePages)
           : selectedPage!,
     );
   }
 
-  Widget _buildPageSelector() {
+  Widget _buildPageSelector(List<_PageConfig> visiblePages) {
     return Column(
-      children: pages.map((page) {
+      children: visiblePages.map((page) {
         return Expanded(
           child: GestureDetector(
             onTap: () {
@@ -109,7 +118,7 @@ class AlternativeViewWrapper extends StatelessWidget {
 }
 
 class MarksGetterViewWrapper extends StatelessWidget {
-    const MarksGetterViewWrapper({super.key});
+  const MarksGetterViewWrapper({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -126,4 +135,3 @@ class MarksGetterViewWrapper extends StatelessWidget {
     );
   }
 }
-

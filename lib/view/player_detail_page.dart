@@ -64,6 +64,9 @@ class _PlayerDetailPageState extends State<PlayerDetailPage> {
                       labelStyle: TextStyle(color: Colors.white),
                       initialVisibleMaximum: 10,
                       majorGridLines: const MajorGridLines(width: 0),
+                      axisLabelFormatter: (AxisLabelRenderDetails details) {
+                        return ChartAxisLabel(details.value.toInt().toString(), TextStyle(color: Colors.white));
+                      },
                     ),
                     zoomPanBehavior: ZoomPanBehavior(
                       enablePanning: true,
@@ -109,6 +112,9 @@ class _PlayerDetailPageState extends State<PlayerDetailPage> {
                       interval: 1,
                       initialVisibleMaximum: 10,
                       majorGridLines: const MajorGridLines(width: 0),
+                      axisLabelFormatter: (AxisLabelRenderDetails details) {
+                        return ChartAxisLabel(details.value.toInt().toString(), TextStyle(color: Colors.white));
+                      },
                     ),
                     primaryYAxis: NumericAxis(
                       labelStyle: TextStyle(color: Colors.white),
