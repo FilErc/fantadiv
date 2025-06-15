@@ -18,6 +18,7 @@ class DefaultFirebaseOptions {
     messagingSenderId: "244659699647",
     appId: "1:244659699647:web:de45d77f0af231a7ef2b0a",
     measurementId: "G-7Q3WSKR59B",
+    databaseURL: "https://fantadiv-default-rtdb.europe-west1.firebasedatabase.app",
   );
 
   static const FirebaseOptions android = FirebaseOptions(
@@ -26,5 +27,6 @@ class DefaultFirebaseOptions {
     messagingSenderId: "244659699647",
     projectId: "fantadiv",
     storageBucket: "fantadiv.appspot.com",
+    databaseURL: "https://fantadiv-default-rtdb.europe-west1.firebasedatabase.app",
   );
 }

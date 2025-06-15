@@ -25,14 +25,29 @@ class AuctionPageContent extends StatelessWidget {
   Widget build(BuildContext context) {
     final viewModel = context.watch<AuctionViewModel>();
 
+    if (viewModel.isLoading) {
+      return const Scaffold(
+        backgroundColor: Colors.black,
+        body: Center(
+          child: CircularProgressIndicator(color: Colors.amber),
+        ),
+      );
+    }
+
     return Scaffold(
       backgroundColor: Colors.black,
       body: SingleChildScrollView(
         scrollDirection: Axis.horizontal,
         child: Row(
           children: List.generate(8, (colIndex) {
+            final totalUsed = viewModel.getTotalSpent(colIndex);
+            final freeSlots = viewModel.getEmptySlots(colIndex);
+            final remaining = 500 - totalUsed;
+            final minimumRequired = freeSlots;
+            final spendable = (remaining - minimumRequired).clamp(0, 999);
+
             return Container(
-              width: 250,
+              width: 260,
               margin: const EdgeInsets.all(8),
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
@@ -66,6 +81,11 @@ class AuctionPageContent extends StatelessWidget {
                     ..._buildRoleSection("D", 8, colIndex, viewModel, isAdmin),
                     ..._buildRoleSection("C", 8, colIndex, viewModel, isAdmin),
                     ..._buildRoleSection("A", 6, colIndex, viewModel, isAdmin),
+                    const SizedBox(height: 10),
+                    Text(
+                      "Crediti residui: $spendable",
+                      style: const TextStyle(color: Colors.amber, fontWeight: FontWeight.bold),
+                    ),
                   ],
                 ),
               ),
@@ -86,6 +106,8 @@ class AuctionPageContent extends StatelessWidget {
     return List.generate(count, (rowIndex) {
       final controller = viewModel.controllers[colIndex][role]![rowIndex];
       final priceController = viewModel.prices[colIndex][role]![rowIndex];
+      final focusNode = viewModel.focusNodes[colIndex][role]![rowIndex];
+      final priceFocusNode = viewModel.priceFocusNodes[colIndex][role]![rowIndex];
 
       return Padding(
         padding: const EdgeInsets.symmetric(vertical: 4),
@@ -95,13 +117,14 @@ class AuctionPageContent extends StatelessWidget {
               flex: 3,
               child: TextField(
                 controller: controller,
+                focusNode: focusNode,
                 readOnly: !isAdmin,
                 style: const TextStyle(color: Colors.white),
                 decoration: InputDecoration(
                   hintText: role,
-                  hintStyle: const TextStyle(color: Colors.grey),
+                  hintStyle: const TextStyle(color: Colors.white70),
                   filled: true,
-                  fillColor: Colors.grey[700],
+                  fillColor: _color(role).withOpacity(0.3),
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
                 ),
               ),
@@ -111,12 +134,13 @@ class AuctionPageContent extends StatelessWidget {
               flex: 1,
               child: TextField(
                 controller: priceController,
+                focusNode: priceFocusNode,
                 keyboardType: TextInputType.number,
                 readOnly: !isAdmin,
                 style: const TextStyle(color: Colors.white),
                 decoration: InputDecoration(
                   hintText: "€",
-                  hintStyle: const TextStyle(color: Colors.grey),
+                  hintStyle: const TextStyle(color: Colors.white70),
                   filled: true,
                   fillColor: Colors.grey[700],
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
@@ -127,5 +151,20 @@ class AuctionPageContent extends StatelessWidget {
         ),
       );
     });
+  }
+
+  Color _color(String code) {
+    switch (code) {
+      case 'A':
+        return Colors.red;
+      case 'C':
+        return Colors.lightBlue;
+      case 'D':
+        return Colors.green;
+      case 'P':
+        return Colors.orange;
+      default:
+        return Colors.grey;
+    }
   }
 }
