@@ -5,14 +5,15 @@ class Squad {
   final String teamName;
   final String owner;
   final DateTime createdAt;
-  final List<DocumentReference>? reference;
+  final Map<DocumentReference, int>? referenceWithPrice;
+
 
   Squad({
     required this.id,
     required this.teamName,
     required this.owner,
     required this.createdAt,
-    this.reference,
+    this.referenceWithPrice,
   });
 
   Map<String, dynamic> toMap() {
@@ -20,21 +21,23 @@ class Squad {
       'teamName': teamName,
       'owner': owner,
       'createdAt': createdAt,
-      'reference': reference?.map((ref) => ref.path).toList(),
+      'referenceWithPrice': referenceWithPrice?.map((ref, price) => MapEntry(ref.path, price)),
     };
   }
 
   factory Squad.fromDocument(DocumentSnapshot doc) {
     final data = doc.data() as Map<String, dynamic>;
+    final rawMap = data['referenceWithPrice'] as Map<String, dynamic>?;
 
     return Squad(
       id: doc.id,
       teamName: data['teamName'] ?? '',
       owner: data['owner'] ?? '',
       createdAt: (data['createdAt'] as Timestamp).toDate(),
-      reference: data['reference'] != null
-          ? (data['reference'] as List).map((path) => FirebaseFirestore.instance.doc(path)).toList()
-          : null,
+      referenceWithPrice: rawMap?.map((path, price) => MapEntry(
+        FirebaseFirestore.instance.doc(path),
+        price is int ? price : int.tryParse(price.toString()) ?? 0,
+      )),
     );
   }
 }

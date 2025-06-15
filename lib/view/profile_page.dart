@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:provider/provider.dart';
 import '/viewmodels/profile_viewmodel.dart';
+import 'player_detail_page.dart';
 
 class ProfilePage extends StatelessWidget {
   const ProfilePage({super.key});
@@ -9,7 +10,7 @@ class ProfilePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
-      create: (context) => ProfileViewModel(),
+      create: (context) => ProfileViewModel()..loadUserTeam(),
       child: Consumer<ProfileViewModel>(
         builder: (context, viewModel, child) {
           final User? user = FirebaseAuth.instance.currentUser;
@@ -31,30 +32,28 @@ class ProfilePage extends StatelessWidget {
   }
 
   Widget _buildProfile(ProfileViewModel viewModel, User? user, BuildContext context) {
-    if (viewModel.squad == null) {
-      return const Center(child: CircularProgressIndicator());
-    }
-
-    return Padding(
-      padding: const EdgeInsets.all(0),
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16),
       child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
         children: [
+          const SizedBox(height: 40),
           const Text("La mia email:", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.amber)),
           Text(user?.email ?? "Email non disponibile", style: const TextStyle(fontSize: 18, color: Colors.amber)),
           const SizedBox(height: 30),
 
           const Text("Nome Squadra:", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.amber)),
-
-          TextField(
-            controller: viewModel.teamNameController,
-            textAlign: TextAlign.center,
-            decoration: const InputDecoration(
-              labelStyle: TextStyle(color: Colors.amber),
-              enabledBorder: OutlineInputBorder(borderSide: BorderSide(color: Colors.amber)),
-              focusedBorder: OutlineInputBorder(borderSide: BorderSide(color: Colors.white)),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: TextField(
+              controller: viewModel.teamNameController,
+              textAlign: TextAlign.center,
+              decoration: const InputDecoration(
+                labelStyle: TextStyle(color: Colors.amber),
+                enabledBorder: OutlineInputBorder(borderSide: BorderSide(color: Colors.amber)),
+                focusedBorder: OutlineInputBorder(borderSide: BorderSide(color: Colors.white)),
+              ),
+              style: const TextStyle(color: Colors.white),
             ),
-            style: const TextStyle(color: Colors.white),
           ),
           const SizedBox(height: 10),
           ElevatedButton(
@@ -65,11 +64,76 @@ class ProfilePage extends StatelessWidget {
 
           const SizedBox(height: 20),
           const Text("Rosa:", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.amber)),
-          viewModel.squad!.reference == null || viewModel.squad!.reference!.isEmpty
-              ? const Text("Rosa non inserita", style: TextStyle(color: Colors.amber))
-              : Column(
-            children: viewModel.squad!.reference!.map((ref) => Text(ref.path, style: const TextStyle(color: Colors.white))).toList(),
-          ),
+          const SizedBox(height: 10),
+
+          if (viewModel.isFetchingPlayers)
+            const Center(child: CircularProgressIndicator(color: Colors.amber))
+          else if (viewModel.loadedPlayers.isEmpty)
+            const Text("Rosa non inserita", style: TextStyle(color: Colors.amber))
+          else
+            Column(
+              children: (viewModel.squad!.referenceWithPrice!.entries
+                  .where((entry) => viewModel.loadedPlayers.containsKey(entry.key))
+                  .toList()
+                ..sort((a, b) {
+                  final roleOrder = {'P': 0, 'D': 1, 'C': 2, 'A': 3};
+                  final playerA = viewModel.loadedPlayers[a.key]!;
+                  final playerB = viewModel.loadedPlayers[b.key]!;
+                  return roleOrder[playerA.position]!.compareTo(roleOrder[playerB.position]!);
+                }))
+                  .map((entry) {
+                final player = viewModel.loadedPlayers[entry.key]!;
+                final price = entry.value;
+                final color = _color(player.position);
+
+                return GestureDetector(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => PlayerDetailPage(player: player)),
+                    );
+                  },
+                  child: Card(
+                    color: Colors.grey[850],
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    margin: const EdgeInsets.symmetric(vertical: 6, horizontal: 8),
+                    child: ListTile(
+                      leading: CircleAvatar(
+                        backgroundColor: color,
+                        child: Text(
+                          player.position,
+                          style: const TextStyle(
+                            color: Colors.black,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                      title: Text(
+                        player.name,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 16,
+                        ),
+                      ),
+                      subtitle: Text(
+                        player.team,
+                        style: const TextStyle(
+                          color: Colors.grey,
+                        ),
+                      ),
+                      trailing: Text(
+                        "€$price",
+                        style: const TextStyle(
+                          color: Colors.amber,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
+                      ),
+                    ),
+                  ),
+                );
+              }).toList(),
+            ),
 
           const SizedBox(height: 30),
           ElevatedButton(
@@ -82,6 +146,7 @@ class ProfilePage extends StatelessWidget {
             style: ElevatedButton.styleFrom(backgroundColor: Colors.amber, foregroundColor: Colors.black),
             child: const Text("Logout"),
           ),
+          const SizedBox(height: 40),
         ],
       ),
     );
@@ -113,5 +178,20 @@ class ProfilePage extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  Color _color(String code) {
+    switch (code) {
+      case 'A':
+        return Colors.red;
+      case 'C':
+        return Colors.lightBlue;
+      case 'D':
+        return Colors.green;
+      case 'P':
+        return Colors.orange;
+      default:
+        return Colors.grey;
+    }
   }
 }

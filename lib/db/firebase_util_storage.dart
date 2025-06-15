@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/cupertino.dart';
 import '../models/players.dart';
 import '../models/round.dart';
 import '../models/squad.dart';
@@ -39,12 +40,13 @@ class FirebaseUtilStorage {
     if (email == null) return;
 
     DocumentReference newDocRef = _firestore.collection('squad').doc();
+
     Squad squad = Squad(
       id: newDocRef.id,
       teamName: teamName,
       owner: email,
       createdAt: DateTime.now(),
-      reference: [],
+      referenceWithPrice: {},
     );
 
     await newDocRef.set(squad.toMap());
@@ -281,4 +283,75 @@ class FirebaseUtilStorage {
       print("❌ Errore durante il salvataggio del giocatore '${player.name}': $e");
     }
   }
+
+  Future<void> linkPlayersToSquadsWithPrices({
+    required List<String?> selectedSquads,
+    required List<Map<String, List<TextEditingController>>> controllers,
+    required List<Map<String, List<TextEditingController>>> prices,
+    required List<Players> allPlayers,
+  }) async {
+    for (int col = 0; col < selectedSquads.length; col++) {
+      final squadName = selectedSquads[col];
+      if (squadName == null) continue;
+
+      final snapshot = await _firestore
+          .collection('squad')
+          .where('teamName', isEqualTo: squadName)
+          .limit(1)
+          .get();
+
+      if (snapshot.docs.isEmpty) continue;
+
+      final squadDocRef = snapshot.docs.first.reference;
+
+      final Map<String, dynamic> referenceWithPrice = {};
+
+      for (final role in ['P', 'D', 'C', 'A']) {
+        for (int i = 0; i < controllers[col][role]!.length; i++) {
+          final name = controllers[col][role]![i].text.trim();
+          final price = int.tryParse(prices[col][role]![i].text.trim()) ?? 0;
+
+          if (name.isEmpty || price <= 0) continue;
+
+          Players? player = allPlayers.firstWhere(
+                (p) => p.name.toLowerCase() == name.toLowerCase() ||
+                p.alias.map((a) => a.toLowerCase()).contains(name.toLowerCase()),
+            orElse: () => Players(name: name, position: role, team: '', alias: []),
+          );
+
+          final docId = player.name.replaceAll(' ', '_').toLowerCase();
+          final playerRef = _firestore.collection('players').doc(docId);
+
+          referenceWithPrice[playerRef.path] = price;
+        }
+      }
+
+      await squadDocRef.set({
+        'referenceWithPrice': referenceWithPrice,
+      }, SetOptions(merge: true));
+    }
+
+    print("✅ Giocatori linkati alle squadre con crediti.");
+  }
+
+  Future<Map<DocumentReference, Players>> loadPlayersByRefs(List<DocumentReference> refs) async {
+    Map<DocumentReference, Players> players = {};
+
+    for (final ref in refs) {
+      try {
+        final doc = await ref.get();
+        if (doc.exists) {
+          final player = Players.fromMap(doc.data() as Map<String, dynamic>);
+          players[ref] = player;
+        }
+      } catch (e) {
+        print('Errore caricando ${ref.path}: $e');
+      }
+    }
+
+    return players;
+  }
+
+
+
 }

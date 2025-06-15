@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import '../db/firebase_util_storage.dart';
+import '../models/players.dart';
 import '../services/auction_realtime_service.dart';
 import 'package:firebase_database/firebase_database.dart';
 
@@ -198,6 +199,15 @@ class AuctionViewModel extends ChangeNotifier {
       }
     });
     return count;
+  }
+
+  Future<void> linkPlayersToSquads(List<Players> allPlayers) async {
+    await _storage.linkPlayersToSquadsWithPrices(
+      selectedSquads: selectedSquads,
+      controllers: controllers,
+      prices: prices,
+      allPlayers: allPlayers,
+    );
   }
 
   @override
