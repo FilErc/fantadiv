@@ -8,11 +8,11 @@ const RESOURCES = {"assets/AssetManifest.bin": "22487f9e47273b99893ac79e02b7fb30
 "assets/AssetManifest.json": "6ecf5f94303bbc6e60aaa406b1ad9a86",
 "assets/assets/fallback/VotiExcelUfficiali-_1_.xlsx": "c2aee62a1e766b71107b2e7b15e9fefb",
 "assets/FontManifest.json": "dc3d03800ccca4601324923c0b1d6d57",
-"assets/fonts/MaterialIcons-Regular.otf": "e2fd85e1ffaac9cda304375a64a50829",
+"assets/fonts/MaterialIcons-Regular.otf": "9ce986351db06d21ec63161d2c0bc35a",
 "assets/images/Draw.png": "b37274f4a91a69d82b6dfdc25c9f972a",
 "assets/images/LvW.png": "6f65bf8ba3898de885d3fb7a71dd6d15",
 "assets/images/WvL.png": "0cfaf8d4ac348ab7fff507e6f386c7f2",
-"assets/NOTICES": "85e84a45583b11ac39ec2a277bc5181a",
+"assets/NOTICES": "93eac7becdf77b8c7c4d96c5acb602ad",
 "assets/packages/cupertino_icons/assets/CupertinoIcons.ttf": "825e75415ebd366b740bb49659d7a5c6",
 "assets/packages/flutter_inappwebview/assets/t_rex_runner/t-rex.css": "5a8d0222407e388155d7d1395a75d5b9",
 "assets/packages/flutter_inappwebview/assets/t_rex_runner/t-rex.html": "16911fcc170c8af1c5457940bd0bf055",
@@ -28,10 +28,10 @@ const RESOURCES = {"assets/AssetManifest.bin": "22487f9e47273b99893ac79e02b7fb30
 "canvaskit/skwasm.js.symbols": "9fe690d47b904d72c7d020bd303adf16",
 "canvaskit/skwasm.wasm": "1c93738510f202d9ff44d36a4760126b",
 "flutter.js": "83d881c1dbb6d6bcd6b42e274605b69c",
-"flutter_bootstrap.js": "d76ff66d561ce0feae07a47d8977613f",
-"index.html": "cc7efb931092e973e9f3173144b50ca4",
-"/": "cc7efb931092e973e9f3173144b50ca4",
-"main.dart.js": "c6209102e35225fd3dfef61c87f4809c",
+"flutter_bootstrap.js": "f4183c46e2f349084a17f214c0d34e8d",
+"index.html": "2ab6bd3293f8ea4b503b3397ae451d24",
+"/": "2ab6bd3293f8ea4b503b3397ae451d24",
+"main.dart.js": "64f7d75278cf339d9c67b4cc91fc97f5",
 "version.json": "e83c8a10cbaa89c321d1dc626fa1562c"};
 // The application shell files that are downloaded before a service worker can
 // start.
