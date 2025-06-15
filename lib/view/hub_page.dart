@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../viewmodels/calendar_viewmodel.dart';
+import '../viewmodels/auction_viewmodel.dart';
 import '../viewmodels/file_picker_viewmodel.dart';
 import '../viewmodels/home_viewmodel.dart';
+import 'action_page.dart';
 import 'listone_view.dart';
 import 'mark_view.dart';
 import 'calendar_page.dart';
@@ -21,6 +23,8 @@ class _HubPageState extends State<HubPage> {
     _PageConfig(title: 'Generatore Manuale', builder: (context) => const ManualViewWrapper()),
     _PageConfig(title: 'Visualizza listone', builder: (context) => const AlternativeViewWrapper()),
     _PageConfig(title: 'Importa i voti', builder: (context) => const MarksGetterViewWrapper()),
+    _PageConfig(title: 'Asta del Fantacalcio', builder: (context) => const AuctionViewWrapper(),),
+
     // Aggiungi qui nuove pagine:
     // _PageConfig(title: 'NomePagina', builder: (context) => NomeView()),
   ];
@@ -29,10 +33,9 @@ class _HubPageState extends State<HubPage> {
   Widget build(BuildContext context) {
     final isAdmin = context.watch<HomeViewModel>().isAdmin;
 
-    // Mostra solo "Visualizza listone" per i non-admin
     final visiblePages = pages.where((page) {
-      if (page.title == 'Visualizza listone') return true;
-      return isAdmin;
+      const publicPages = ['Visualizza listone', 'Asta del Fantacalcio'];
+      return publicPages.contains(page.title) || isAdmin;
     }).toList();
 
     return Scaffold(
@@ -122,12 +125,20 @@ class MarksGetterViewWrapper extends StatelessWidget {
       create: (_) => FilePickerViewModel(),
       child: Scaffold(
         backgroundColor: Colors.black,
-        appBar: AppBar(
-          title: const Text('Importa i voti'),
-          backgroundColor: Colors.grey[900],
-        ),
         body: const MarkView(),
       ),
+    );
+  }
+}
+
+class AuctionViewWrapper extends StatelessWidget {
+  const AuctionViewWrapper({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return ChangeNotifierProvider(
+      create: (_) => AuctionViewModel(),
+      child: const AuctionPage(),
     );
   }
 }

@@ -1,3 +1,4 @@
+import 'package:fantadiv/view/squad_maker_page.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../viewmodels/home_viewmodel.dart';
@@ -59,16 +60,16 @@ class HomePage extends StatelessWidget {
   }
 
   BottomNavigationBar _buildNavBar(HomeViewModel viewModel) {
-    List<BottomNavigationBarItem> userItems = [
-      const BottomNavigationBarItem(
+    List<BottomNavigationBarItem> userItems = const [
+      BottomNavigationBarItem(
         icon: Icon(Icons.home, size: 28),
         label: '',
       ),
-      const BottomNavigationBarItem(
+      BottomNavigationBarItem(
         icon: Icon(Icons.calendar_view_day, size: 28),
         label: '',
       ),
-      const BottomNavigationBarItem(
+      BottomNavigationBarItem(
         icon: Icon(Icons.person, size: 28),
         label: '',
       ),
@@ -124,19 +125,11 @@ class _HomeContentState extends State<HomeContent> {
       child: Center(
         child: Padding(
           padding: const EdgeInsets.all(20.0),
-          child: viewModel.allRounds.isNotEmpty
+          child: !viewModel.isCountdownReady
+              ? const CircularProgressIndicator(color: Colors.amber)
+              : viewModel.allRounds.isNotEmpty
               ? Column(
             children: [
-              Text(
-                viewModel.getCountdownToFirstIncomplete(),
-                style: const TextStyle(
-                  color: Colors.amber,
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 16),
               Expanded(
                 child: PageView.builder(
                   controller: _pageController,
@@ -154,7 +147,7 @@ class _HomeContentState extends State<HomeContent> {
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(10),
-                          color: Colors.grey[850],
+                          color: Colors.black,
                         ),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.center,
@@ -198,7 +191,9 @@ class _HomeContentState extends State<HomeContent> {
                                       padding: const EdgeInsets.only(bottom: 5),
                                       child: Container(
                                         padding: const EdgeInsets.symmetric(
-                                            vertical: 8, horizontal: 10),
+                                          vertical: 8,
+                                          horizontal: 10,
+                                        ),
                                         decoration: BoxDecoration(
                                           borderRadius: BorderRadius.circular(8),
                                           border: Border.all(color: Colors.black, width: 1.5),
@@ -223,13 +218,48 @@ class _HomeContentState extends State<HomeContent> {
                                   );
                                 },
                               ),
-                            )
+                            ),
                           ],
                         ),
                       ),
                     );
                   },
                 ),
+              ),
+              const SizedBox(height: 12),
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => SquadMakerPage(),
+                    ),
+                  );
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.amber,
+                  foregroundColor: Colors.black,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+                child: const Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                  child: Text(
+                    'Inserisci formazione',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 10),
+              Text(
+                viewModel.countdown,
+                style: const TextStyle(
+                  color: Colors.amber,
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+                textAlign: TextAlign.center,
               ),
             ],
           )
@@ -248,6 +278,3 @@ class _HomeContentState extends State<HomeContent> {
     );
   }
 }
-
-
-

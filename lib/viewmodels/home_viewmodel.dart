@@ -1,9 +1,10 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-
 import '../db/firebase_util_storage.dart';
 import '../models/round.dart';
+import '../services/server_time_service.dart';
 
 class HomeViewModel extends ChangeNotifier {
   final FirebaseUtilStorage _storage = FirebaseUtilStorage();
@@ -19,6 +20,11 @@ class HomeViewModel extends ChangeNotifier {
 
   bool _isDisposed = false;
 
+  String _countdown = '';
+  String get countdown => _countdown;
+
+  Timer? _countdownTimer;
+
   HomeViewModel() {
     checkUserPermissions();
     getCalendar();
@@ -27,6 +33,7 @@ class HomeViewModel extends ChangeNotifier {
   @override
   void dispose() {
     _isDisposed = true;
+    _countdownTimer?.cancel();
     super.dispose();
   }
 
@@ -48,9 +55,8 @@ class HomeViewModel extends ChangeNotifier {
     }
 
     _isLoading = false;
-
     if (!_isDisposed) {
-      notifyListeners(); // Only notify listeners if the ViewModel is not disposed
+      notifyListeners();
     }
   }
 
@@ -63,8 +69,13 @@ class HomeViewModel extends ChangeNotifier {
 
   Future<void> getCalendar() async {
     _allRounds = await _storage.getAllRounds();
+
     if (!_isDisposed) {
       notifyListeners();
+    }
+
+    if (firstIncompleteRound != null && firstIncompleteRound!.timestamp != null) {
+      startCountdownTimer();
     }
   }
 
@@ -77,19 +88,39 @@ class HomeViewModel extends ChangeNotifier {
     return index != -1 ? allRounds[index] : null;
   }
 
-  String getCountdownToFirstIncomplete() {
+  void startCountdownTimer() {
+    _updateCountdown();
+    _countdownTimer?.cancel();
+    _countdownTimer = Timer.periodic(Duration(seconds: 1), (_) => _updateCountdown());
+  }
+
+  void _updateCountdown() async {
     final round = firstIncompleteRound;
-    if (round == null || round.timestamp == null) return "Nessuna data disponibile";
+    if (round == null || round.timestamp == null) {
+      _countdown = "Nessuna data disponibile";
+    } else {
+      final serverNow = await ServerTimeService.fetchServerTime();
+      if (serverNow == null) {
+        _countdown = "Errore nel recupero dell'orario server";
+      } else {
+        final diff = round.timestamp!.difference(serverNow);
+        if (diff.isNegative) {
+          _countdown = "In corso o già passato";
+        } else {
+          final days = diff.inDays;
+          final hours = diff.inHours % 24;
+          final minutes = diff.inMinutes % 60;
+          final seconds = diff.inSeconds % 60;
+          _countdown = "$days giorni, $hours ore, $minutes minuti, $seconds secondi rimanenti";
+        }
+      }
+    }
 
-    final now = DateTime.now();
-    final diff = round.timestamp!.difference(now);
-
-    if (diff.isNegative) return "In corso o già passato";
-
-    final days = diff.inDays;
-    final hours = diff.inHours % 24;
-    final minutes = diff.inMinutes % 60;
-
-    return "$days giorni, $hours ore, $minutes minuti rimanenti";
+    if (!_isDisposed) notifyListeners();
+  }
+  bool get isCountdownReady {
+    return _countdown.isNotEmpty &&
+        _countdown != "Nessuna data disponibile" &&
+        _countdown != "Errore nel recupero dell'orario server";
   }
 }

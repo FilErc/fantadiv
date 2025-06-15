@@ -79,14 +79,22 @@ class FirebaseUtilStorage {
   }
 
   Future<void> saveRound(int i, List<Match> listOfMatch) async {
-    await _firestore.collection('rounds').doc().set({
-      'day': i+1,
+    await _firestore.collection('rounds').doc('${i + 1}').set({
+      'day': i + 1,
       'matches': listOfMatch.map((match) {
         return {
           'team1': match.team1,
           'team2': match.team2,
+          'gT1': match.gT1,
+          'gT2': match.gT2,
+          'sT1': match.sT1,
+          'sT2': match.sT2,
+          'pT1': match.pT1.map((p) => p.toMap()).toList(),
+          'pT2': match.pT2.map((p) => p.toMap()).toList(),
         };
       }).toList(),
+      'timestamp': DateTime(2030, 3, 15, 10, 30),
+      'boolean': false,
     });
   }
 
@@ -122,7 +130,7 @@ class FirebaseUtilStorage {
       }
       int c=0;
       do{
-        await _firestore.collection('rounds').doc().set({
+        await _firestore.collection('rounds').doc('${i + 1}').set({
           'day': i + 1,
           'matches': roundsList[c].matches.map((match) {
             return {
@@ -132,15 +140,15 @@ class FirebaseUtilStorage {
               'gT2': match.gT2,
               'sT1': match.sT1,
               'sT2': match.sT2,
-              'pT1': match.pT1.map((p) => p.toMap()).toList() ?? [],
-              'pT2': match.pT2.map((p) => p.toMap()).toList() ?? [],
+              'pT1': match.pT1.map((p) => p.toMap()).toList(),
+              'pT2': match.pT2.map((p) => p.toMap()).toList(),
             };
           }).toList(),
           'timestamp': DateTime(2030, 3, 15, 10, 30),
           'boolean': false,
         });
         c++;
-        if(c== roundsList.length){
+        if(c == roundsList.length){
           c=0;
         }
         i++;
@@ -175,7 +183,14 @@ class FirebaseUtilStorage {
                 [],
           );
         }).toList();
-        return Round(data['day'], matches);
+        return Round(
+          data['day'],
+          matches,
+          timestamp: data['timestamp'] != null
+              ? (data['timestamp'] as Timestamp).toDate()
+              : null,
+          boolean: data['boolean'] ?? false,
+        );
       }).toList();
       roundsList.sort((a, b) => a.day.compareTo(b.day));
       return roundsList;
@@ -266,5 +281,4 @@ class FirebaseUtilStorage {
       print("❌ Errore durante il salvataggio del giocatore '${player.name}': $e");
     }
   }
-
 }
