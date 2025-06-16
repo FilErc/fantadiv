@@ -24,6 +24,8 @@ class HomeViewModel extends ChangeNotifier {
   String get countdown => _countdown;
 
   Timer? _countdownTimer;
+  Duration? _countdownDuration;
+  DateTime? _serverTimeFetchedAt;
 
   HomeViewModel() {
     checkUserPermissions();
@@ -88,36 +90,49 @@ class HomeViewModel extends ChangeNotifier {
     return index != -1 ? allRounds[index] : null;
   }
 
-  void startCountdownTimer() {
+  void startCountdownTimer() async {
+    final round = firstIncompleteRound;
+    if (round == null || round.timestamp == null) return;
+
+    final serverNow = await ServerTimeService.fetchServerTime();
+    if (serverNow == null) {
+      _countdown = "Errore nel recupero dell'orario server";
+      if (!_isDisposed) notifyListeners();
+      return;
+    }
+
+    _serverTimeFetchedAt = DateTime.now();
+    _countdownDuration = round.timestamp!.difference(serverNow);
+
     _updateCountdown();
     _countdownTimer?.cancel();
-    _countdownTimer = Timer.periodic(Duration(seconds: 1), (_) => _updateCountdown());
+    _countdownTimer = Timer.periodic(const Duration(seconds: 1), (_) => _updateCountdown());
   }
 
-  void _updateCountdown() async {
-    final round = firstIncompleteRound;
-    if (round == null || round.timestamp == null) {
+
+  void _updateCountdown() {
+    if (_countdownDuration == null || _serverTimeFetchedAt == null) {
       _countdown = "Nessuna data disponibile";
+      if (!_isDisposed) notifyListeners();
+      return;
+    }
+
+    final elapsed = DateTime.now().difference(_serverTimeFetchedAt!);
+    final remaining = _countdownDuration! - elapsed;
+
+    if (remaining.isNegative) {
+      _countdown = "In corso o già passato";
     } else {
-      final serverNow = await ServerTimeService.fetchServerTime();
-      if (serverNow == null) {
-        _countdown = "Errore nel recupero dell'orario server";
-      } else {
-        final diff = round.timestamp!.difference(serverNow);
-        if (diff.isNegative) {
-          _countdown = "In corso o già passato";
-        } else {
-          final days = diff.inDays;
-          final hours = diff.inHours % 24;
-          final minutes = diff.inMinutes % 60;
-          final seconds = diff.inSeconds % 60;
-          _countdown = "$days giorni, $hours ore, $minutes minuti, $seconds secondi rimanenti";
-        }
-      }
+      final days = remaining.inDays;
+      final hours = remaining.inHours % 24;
+      final minutes = remaining.inMinutes % 60;
+      final seconds = remaining.inSeconds % 60;
+      _countdown = "$days giorni, $hours ore, $minutes minuti, $seconds secondi rimanenti";
     }
 
     if (!_isDisposed) notifyListeners();
   }
+
   bool get isCountdownReady {
     return _countdown.isNotEmpty &&
         _countdown != "Nessuna data disponibile" &&

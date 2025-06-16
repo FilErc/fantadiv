@@ -4,9 +4,12 @@ import 'package:timezone/data/latest_all.dart' as tzdata;
 
 class ServerTimeService {
   static bool _initialized = false;
+  static DateTime? _cachedServerTime;
 
   static Future<DateTime?> fetchServerTime() async {
     try {
+      if (_cachedServerTime != null) return _cachedServerTime;
+
       if (!_initialized) {
         tzdata.initializeTimeZones();
         _initialized = true;
@@ -21,10 +24,10 @@ class ServerTimeService {
       if (serverTimestamp == null) return null;
 
       final utc = serverTimestamp.toDate();
-
       final location = tz.getLocation('Europe/Rome');
       final romeTime = tz.TZDateTime.from(utc, location);
 
+      _cachedServerTime = romeTime;
       return romeTime;
     } catch (e) {
       print("Errore nel recuperare l'orario dal server Firestore: $e");

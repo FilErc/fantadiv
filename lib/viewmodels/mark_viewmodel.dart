@@ -6,7 +6,6 @@ import '../db/firebase_util_storage.dart';
 import '../models/players.dart';
 
 class MarkViewModel extends ChangeNotifier {
-  int _currentGiornata = 34;
   bool isLoading = false;
   final FirebaseUtilStorage _storage = FirebaseUtilStorage();
   final FilePickerViewModel _filepicker;
@@ -17,25 +16,21 @@ class MarkViewModel extends ChangeNotifier {
   void resumeLoop() => _shouldPause = false;
 
   Future<void> startAutoImport({
+    required int giornata,
     required Future<Players?> Function(String name) onPlayerNotFound,
   }) async {
     isLoading = true;
     notifyListeners();
-    await _importNext(onPlayerNotFound);
+    await _importGiornata(giornata, onPlayerNotFound);
     isLoading = false;
     notifyListeners();
   }
 
-  Future<void> _importNext(
+  Future<void> _importGiornata(
+      int giornata,
       Future<Players?> Function(String name) onPlayerNotFound,
       ) async {
-    if (_currentGiornata > 38) {
-      print("🎉 Completato");
-      await _saveAllPlayersToFirestore();
-      return;
-    }
-
-    final file = await ConvertioService.scaricaConvertiERiformatta(_currentGiornata);
+    final file = await ConvertioService.scaricaConvertiERiformatta(giornata);
     if (file != null) {
       final excel = Excel.decodeBytes(await file.readAsBytes());
       for (var table in excel.tables.keys) {
@@ -43,6 +38,7 @@ class MarkViewModel extends ChangeNotifier {
         for (int i = 0; i < rows.length; i++) {
           final row = rows[i];
           final values = row.map((e) => e?.value.toString().trim() ?? '').toList();
+          print(values);
           if (values.isEmpty) continue;
 
           final rawValue = values[0].split(" ");
@@ -63,12 +59,14 @@ class MarkViewModel extends ChangeNotifier {
 
           if (player == null) continue;
 
-          final giornataIndex = _currentGiornata - 1;
+          final giornataIndex = giornata - 1;
           final lastIndex = rawValue.length - 1;
 
-          final vts = double.tryParse(rawValue[lastIndex - 0].replaceAll(',', '.')) ?? 0.0;
-          final vc = double.tryParse(rawValue[lastIndex - 1].replaceAll(',', '.')) ?? 0.0;
-          final vg = double.tryParse(rawValue[lastIndex - 2].replaceAll(',', '.')) ?? 0.0;
+          final vts = double.tryParse(rawValue[lastIndex - 18].replaceAll(',', '.')) ?? 0.0;
+          final vc = double.tryParse(rawValue[lastIndex - 23].replaceAll(',', '.')) ?? 0.0;
+          final raw = rawValue[lastIndex - 28].replaceAll(',', '.');
+          final cuttle = double.tryParse(raw) ?? 0.0;
+          final vg = (cuttle * 10).truncateToDouble() / 10;
           final rS = int.tryParse(rawValue[lastIndex - 4]) ?? 0;
           final rT = int.tryParse(rawValue[lastIndex - 5]) ?? 0;
           final rigP = int.tryParse(rawValue[lastIndex - 6]) ?? 0;
@@ -90,8 +88,8 @@ class MarkViewModel extends ChangeNotifier {
             'Esp': esp,
             'RigS': rigS,
             'RigP': rigP,
-            'RigTrasf':rT,
-            'RigSbagliato':rS,
+            'RigTrasf': rT,
+            'RigSbagliato': rS,
             'VG': vg,
             'VC': vc,
             'VTS': vts,
@@ -103,13 +101,12 @@ class MarkViewModel extends ChangeNotifier {
         }
       }
     } else {
-      print("⚠️ Conversione fallita per giornata $_currentGiornata");
+      print("⚠️ Conversione fallita per giornata $giornata");
     }
-
-    _currentGiornata++;
     await Future.delayed(const Duration(milliseconds: 300));
-    await _importNext(onPlayerNotFound);
+    await _saveAllPlayersToFirestore();
   }
+
 
   Future<void> _saveAllPlayersToFirestore() async {
     await _storage.savePlayersInBatch(_filepicker.allPlayers);
@@ -122,7 +119,6 @@ class MarkViewModel extends ChangeNotifier {
               (p) {
             final nameMatch = p.name.toLowerCase().contains(lower);
             final aliasMatch = p.alias.any((alias) => alias.trim().toLowerCase().contains(lower));
-            //final teamMatch = p.team.toLowerCase() == team.toLowerCase();
             return (nameMatch || aliasMatch);
           },);
     } catch (_) {
