@@ -33,10 +33,6 @@ class _MarkView extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: Colors.black,
-      appBar: AppBar(
-        title: const Text('Importazione Automatica'),
-        backgroundColor: Colors.black,
-      ),
       body: vm.isLoading
           ? const Center(child: CircularProgressIndicator())
           : ListView.builder(

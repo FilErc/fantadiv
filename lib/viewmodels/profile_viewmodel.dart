@@ -109,5 +109,4 @@ class ProfileViewModel extends ChangeNotifier {
     );
 
   }
-
 }
