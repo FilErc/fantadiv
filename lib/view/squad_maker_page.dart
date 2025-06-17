@@ -1,13 +1,16 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../models/round.dart';
 import '../viewmodels/squad_maker_viewmodel.dart';
 import '../viewmodels/profile_viewmodel.dart';
 import '../models/players.dart';
 import '../widgets/football_field_painter.dart';
 
 class SquadMakerPage extends StatefulWidget {
-  const SquadMakerPage({super.key});
+  final Round giornata;
+  const SquadMakerPage({super.key, required this.giornata});
+
 
   @override
   State<SquadMakerPage> createState() => _SquadMakerPageState();
@@ -54,11 +57,31 @@ class _SquadMakerPageState extends State<SquadMakerPage> {
 
   Color _color(String code) {
     switch (code) {
-      case 'A': return Colors.red;
-      case 'C': return Colors.lightBlue;
-      case 'D': return Colors.green;
-      case 'P': return Colors.orange;
-      default: return Colors.grey;
+      case 'A':
+        return Colors.red;
+      case 'C':
+        return Colors.lightBlue;
+      case 'D':
+        return Colors.green;
+      case 'P':
+        return Colors.orange;
+      default:
+        return Colors.grey;
+    }
+  }
+
+  String _roleName(String role) {
+    switch (role) {
+      case 'P':
+        return 'Portiere';
+      case 'D':
+        return 'Difensore';
+      case 'C':
+        return 'Centrocampista';
+      case 'A':
+        return 'Attaccante';
+      default:
+        return 'Ruolo';
     }
   }
 
@@ -66,9 +89,9 @@ class _SquadMakerPageState extends State<SquadMakerPage> {
       BuildContext context,
       List<Players> players,
       String role,
-      Function(String) onPlayerSelected,
+      Function(Players) onPlayerSelected,
       ) {
-    final selected = context.read<SquadMakerViewModel>().roleToPlayers.values.expand((e) => e).toSet();
+    final selected = context.read<SquadMakerViewModel>().roleToPlayers.values.expand((e) => e).map((p) => p.name).toSet();
 
     final filtered = players
         .where((p) => p.position == role && !selected.contains(p.name))
@@ -99,7 +122,7 @@ class _SquadMakerPageState extends State<SquadMakerPage> {
                   color: _color(player.position),
                   onPressed: () {
                     Navigator.pop(context);
-                    onPlayerSelected(player.name);
+                    onPlayerSelected(player);
                   },
                 ),
               );
@@ -108,16 +131,6 @@ class _SquadMakerPageState extends State<SquadMakerPage> {
         ),
       ),
     );
-  }
-
-  String _roleName(String role) {
-    switch (role) {
-      case 'P': return 'Portiere';
-      case 'D': return 'Difensore';
-      case 'C': return 'Centrocampista';
-      case 'A': return 'Attaccante';
-      default: return 'Ruolo';
-    }
   }
 
   @override
@@ -146,12 +159,11 @@ class _SquadMakerPageState extends State<SquadMakerPage> {
 
         final roleCounts = _moduleToRoleCounts(selectedModule);
         final allPlayers = List<Players>.from(playersMap.values);
-        final selectedPlayers = squadVM.roleToPlayers.values.expand((e) => e).toSet();
 
         if (squadVM.orderedBench.isEmpty) {
           WidgetsBinding.instance.addPostFrameCallback((_) {
-            final selected = squadVM.roleToPlayers.values.expand((e) => e).toSet();
-            squadVM.initializeBench(allPlayers, selected);
+            final selectedNames = squadVM.roleToPlayers.values.expand((e) => e).map((p) => p.name).toSet();
+            squadVM.initializeBench(allPlayers, selectedNames);
           });
         }
 
@@ -181,7 +193,7 @@ class _SquadMakerPageState extends State<SquadMakerPage> {
                         setState(() {
                           selectedModule = value!;
                           squadVM.clearSquadWithStructure(_moduleToRoleCounts(selectedModule));
-                          final selected = squadVM.roleToPlayers.values.expand((e) => e).toSet();
+                          final selected = squadVM.roleToPlayers.values.expand((e) => e).map((p) => p.name).toSet();
                           WidgetsBinding.instance.addPostFrameCallback((_) {
                             squadVM.initializeBench(allPlayers, selected);
                           });
@@ -190,7 +202,6 @@ class _SquadMakerPageState extends State<SquadMakerPage> {
                     ),
                   ),
                   const SizedBox(height: 16),
-
                   SizedBox(
                     height: 400,
                     child: Container(
@@ -219,7 +230,7 @@ class _SquadMakerPageState extends State<SquadMakerPage> {
                                 for (int i = 0; i < count; i++) {
                                   final x = width / (count + 1) * (i + 1);
                                   final y = yMap[role]!;
-                                  final selectedName = squadVM.getPlayerAt(role, i);
+                                  final player = squadVM.getPlayerAt(role, i);
 
                                   buttons.add(Positioned(
                                     left: x - 30,
@@ -241,17 +252,17 @@ class _SquadMakerPageState extends State<SquadMakerPage> {
                                             backgroundColor: _color(role),
                                           ),
                                           child: Text(
-                                            selectedName.isEmpty ? role : selectedName[0],
+                                            player == null ? role : player.name[0],
                                             style: const TextStyle(color: Colors.white),
                                           ),
                                         ),
-                                        if (selectedName.isNotEmpty)
+                                        if (player != null)
                                           Padding(
                                             padding: const EdgeInsets.only(top: 4),
                                             child: SizedBox(
                                               width: 60,
                                               child: Text(
-                                                selectedName,
+                                                player.name,
                                                 textAlign: TextAlign.center,
                                                 style: const TextStyle(
                                                     color: Colors.white, fontSize: 12),
@@ -272,15 +283,15 @@ class _SquadMakerPageState extends State<SquadMakerPage> {
                       ),
                     ),
                   ),
-
                   const SizedBox(height: 16),
                   const Text(
                     "Panchina",
                     style: TextStyle(color: Colors.amber, fontSize: 18),
+                    textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 4),
                   const Text(
-                    "Per modificare l’ordine dei panchinari, tieni premuto su un giocatore e trascinalo nella posizione desiderata. In fase di calcolo l’ordine definisce la priorità d’ingresso: il primo ha precedenza sui successivi.",
+                    "Per modificare l’ordine dei panchinari, tieni premuto su un giocatore e trascinalo nella posizione desiderata.",
                     style: TextStyle(color: Colors.white70, fontSize: 14),
                     textAlign: TextAlign.center,
                   ),
@@ -288,14 +299,11 @@ class _SquadMakerPageState extends State<SquadMakerPage> {
                   SizedBox(
                     height: 300,
                     child: ReorderableListView(
-                      shrinkWrap: true,
-                      physics: NeverScrollableScrollPhysics(),
-                      buildDefaultDragHandles: true,
                       padding: const EdgeInsets.all(8),
-                      children: squadVM.orderedBench.map((name) {
-                        final player = allPlayers.firstWhere((p) => p.name == name);
+                      buildDefaultDragHandles: true,
+                      children: squadVM.orderedBench.map((player) {
                         return Container(
-                          key: ValueKey(name),
+                          key: ValueKey(player.name),
                           margin: const EdgeInsets.symmetric(vertical: 8),
                           padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
                           decoration: BoxDecoration(
@@ -305,7 +313,7 @@ class _SquadMakerPageState extends State<SquadMakerPage> {
                           ),
                           child: Center(
                             child: Text(
-                              name,
+                              player.name,
                               style: TextStyle(
                                 color: _color(player.position),
                                 fontWeight: FontWeight.bold,
@@ -317,18 +325,21 @@ class _SquadMakerPageState extends State<SquadMakerPage> {
                       }).toList(),
                       onReorder: (oldIndex, newIndex) {
                         if (newIndex > oldIndex) newIndex -= 1;
-                        final updated = List<String>.from(squadVM.orderedBench);
+                        final updated = List<Players>.from(squadVM.orderedBench);
                         final moved = updated.removeAt(oldIndex);
                         updated.insert(newIndex, moved);
                         squadVM.updateBenchOrder(updated);
                       },
                     ),
                   ),
-
                   const SizedBox(height: 16),
                   ElevatedButton(
                     onPressed: squadVM.isSquadComplete(roleCounts)
-                        ? squadVM.confirmSquad
+                        ? () {
+                      final profileVM = context.read<ProfileViewModel>();
+                      final squad = profileVM.squad;
+                      squadVM.confirmSquad(widget.giornata, squad!);
+                    }
                         : null,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.amber,

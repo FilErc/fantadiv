@@ -229,12 +229,25 @@ class _HomeContentState extends State<HomeContent> {
               const SizedBox(height: 12),
               ElevatedButton(
                 onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => SquadMakerPage(),
-                    ),
-                  );
+                  final round = context.read<HomeViewModel>().firstIncompleteRound;
+
+                  if (round != null) {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => SquadMakerPage(
+                          giornata: round,
+                        ),
+                      ),
+                    );
+                  } else {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Nessuna giornata disponibile al momento.'),
+                        backgroundColor: Colors.redAccent,
+                      ),
+                    );
+                  }
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.amber,
