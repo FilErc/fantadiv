@@ -148,7 +148,6 @@ class _SquadMakerPageState extends State<SquadMakerPage> {
         final allPlayers = List<Players>.from(playersMap.values);
         final selectedPlayers = squadVM.roleToPlayers.values.expand((e) => e).toSet();
 
-        // Posticipa l'inizializzazione della panchina per evitare errori durante il build
         if (squadVM.orderedBench.isEmpty) {
           WidgetsBinding.instance.addPostFrameCallback((_) {
             final selected = squadVM.roleToPlayers.values.expand((e) => e).toSet();
@@ -163,180 +162,182 @@ class _SquadMakerPageState extends State<SquadMakerPage> {
             centerTitle: true,
           ),
           backgroundColor: Colors.black,
-          body: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              children: [
-                Center(
-                  child: DropdownButton<String>(
-                    value: selectedModule,
-                    dropdownColor: Colors.black,
-                    style: const TextStyle(color: Colors.amber),
-                    iconEnabledColor: Colors.amber,
-                    items: modules.map((mod) {
-                      return DropdownMenuItem(value: mod, child: Text(mod));
-                    }).toList(),
-                    onChanged: (value) {
-                      setState(() {
-                        selectedModule = value!;
-                        squadVM.clearSquadWithStructure(_moduleToRoleCounts(selectedModule));
-                        final selected = squadVM.roleToPlayers.values.expand((e) => e).toSet();
-                        WidgetsBinding.instance.addPostFrameCallback((_) {
-                          squadVM.initializeBench(allPlayers, selected);
+          body: SingleChildScrollView(
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Center(
+                    child: DropdownButton<String>(
+                      value: selectedModule,
+                      dropdownColor: Colors.black,
+                      style: const TextStyle(color: Colors.amber),
+                      iconEnabledColor: Colors.amber,
+                      items: modules.map((mod) {
+                        return DropdownMenuItem(value: mod, child: Text(mod));
+                      }).toList(),
+                      onChanged: (value) {
+                        setState(() {
+                          selectedModule = value!;
+                          squadVM.clearSquadWithStructure(_moduleToRoleCounts(selectedModule));
+                          final selected = squadVM.roleToPlayers.values.expand((e) => e).toSet();
+                          WidgetsBinding.instance.addPostFrameCallback((_) {
+                            squadVM.initializeBench(allPlayers, selected);
+                          });
                         });
-                      });
-                    },
-                  ),
-                ),
-                const SizedBox(height: 16),
-
-                // Campo da gioco
-                Expanded(
-                  flex: 5,
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: Colors.green[900],
-                      borderRadius: BorderRadius.circular(12),
+                      },
                     ),
-                    child: Stack(
-                      children: [
-                        CustomPaint(size: Size.infinite, painter: FootballFieldPainter()),
-                        LayoutBuilder(
-                          builder: (context, constraints) {
-                            final width = constraints.maxWidth;
-                            final height = constraints.maxHeight;
-                            List<Widget> buttons = [];
+                  ),
+                  const SizedBox(height: 16),
 
-                            final yMap = {
-                              'P': height * 0.05,
-                              'D': height * 0.25,
-                              'C': height * 0.5,
-                              'A': height * 0.75,
-                            };
+                  SizedBox(
+                    height: 400,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: Colors.green[900],
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Stack(
+                        children: [
+                          CustomPaint(size: Size.infinite, painter: FootballFieldPainter()),
+                          LayoutBuilder(
+                            builder: (context, constraints) {
+                              final width = constraints.maxWidth;
+                              final height = constraints.maxHeight;
+                              List<Widget> buttons = [];
 
-                            for (final role in ['P', 'D', 'C', 'A']) {
-                              final count = roleCounts[role]!;
-                              for (int i = 0; i < count; i++) {
-                                final x = width / (count + 1) * (i + 1);
-                                final y = yMap[role]!;
-                                final selectedName = squadVM.getPlayerAt(role, i);
+                              final yMap = {
+                                'P': height * 0.05,
+                                'D': height * 0.25,
+                                'C': height * 0.5,
+                                'A': height * 0.75,
+                              };
 
-                                buttons.add(Positioned(
-                                  left: x - 30,
-                                  top: y - 30,
-                                  child: Column(
-                                    children: [
-                                      ElevatedButton(
-                                        onPressed: () {
-                                          _showPlayersByRole(
-                                            context,
-                                            allPlayers,
-                                            role,
-                                                (selected) => squadVM.setPlayerAt(role, i, selected),
-                                          );
-                                        },
-                                        style: ElevatedButton.styleFrom(
-                                          shape: const CircleBorder(),
-                                          padding: const EdgeInsets.all(12),
-                                          backgroundColor: _color(role),
-                                        ),
-                                        child: Text(
-                                          selectedName.isEmpty ? role : selectedName[0],
-                                          style: const TextStyle(color: Colors.white),
-                                        ),
-                                      ),
-                                      if (selectedName.isNotEmpty)
-                                        Padding(
-                                          padding: const EdgeInsets.only(top: 4),
-                                          child: SizedBox(
-                                            width: 60,
-                                            child: Text(
-                                              selectedName,
-                                              textAlign: TextAlign.center,
-                                              style: const TextStyle(
-                                                  color: Colors.white, fontSize: 12),
-                                              overflow: TextOverflow.ellipsis,
-                                            ),
+                              for (final role in ['P', 'D', 'C', 'A']) {
+                                final count = roleCounts[role]!;
+                                for (int i = 0; i < count; i++) {
+                                  final x = width / (count + 1) * (i + 1);
+                                  final y = yMap[role]!;
+                                  final selectedName = squadVM.getPlayerAt(role, i);
+
+                                  buttons.add(Positioned(
+                                    left: x - 30,
+                                    top: y - 30,
+                                    child: Column(
+                                      children: [
+                                        ElevatedButton(
+                                          onPressed: () {
+                                            _showPlayersByRole(
+                                              context,
+                                              allPlayers,
+                                              role,
+                                                  (selected) => squadVM.setPlayerAt(role, i, selected),
+                                            );
+                                          },
+                                          style: ElevatedButton.styleFrom(
+                                            shape: const CircleBorder(),
+                                            padding: const EdgeInsets.all(12),
+                                            backgroundColor: _color(role),
+                                          ),
+                                          child: Text(
+                                            selectedName.isEmpty ? role : selectedName[0],
+                                            style: const TextStyle(color: Colors.white),
                                           ),
                                         ),
-                                    ],
-                                  ),
-                                ));
+                                        if (selectedName.isNotEmpty)
+                                          Padding(
+                                            padding: const EdgeInsets.only(top: 4),
+                                            child: SizedBox(
+                                              width: 60,
+                                              child: Text(
+                                                selectedName,
+                                                textAlign: TextAlign.center,
+                                                style: const TextStyle(
+                                                    color: Colors.white, fontSize: 12),
+                                                overflow: TextOverflow.ellipsis,
+                                              ),
+                                            ),
+                                          ),
+                                      ],
+                                    ),
+                                  ));
+                                }
                               }
-                            }
 
-                            return Stack(children: buttons);
-                          },
-                        ),
-                      ],
+                              return Stack(children: buttons);
+                            },
+                          ),
+                        ],
+                      ),
                     ),
                   ),
-                ),
 
-                const SizedBox(height: 16),
-                const Text(
-                  "Panchina",
-                  style: TextStyle(color: Colors.amber, fontSize: 18),
-                ),
-                const SizedBox(height: 4),
-                const Text(
-                  "Per modificare l’ordine dei panchinari, tieni premuto su un giocatore e trascinalo nella posizione desiderata. In fase di calcolo l’ordine definisce la priorità d’ingresso: il primo ha precedenza sui successivi.",
-                  style: TextStyle(color: Colors.white70, fontSize: 14),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 8),
-                const SizedBox(height: 8),
-                SizedBox(
-                  height: 300,
-                  child: ReorderableListView(
-                    buildDefaultDragHandles: true,
-                    padding: const EdgeInsets.all(8),
-                    children: squadVM.orderedBench.map((name) {
-                      final player = allPlayers.firstWhere((p) => p.name == name);
-                      return Container(
-                        key: ValueKey(name),
-                        margin: const EdgeInsets.symmetric(vertical: 8),
-                        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-                        decoration: BoxDecoration(
-                          color: Colors.black,
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: _color(player.position), width: 2),
-                        ),
-                        child: Center(
-                          child: Text(
-                            name,
-                            style: TextStyle(
-                              color: _color(player.position),
-                              fontWeight: FontWeight.bold,
-                              fontSize: 16,
+                  const SizedBox(height: 16),
+                  const Text(
+                    "Panchina",
+                    style: TextStyle(color: Colors.amber, fontSize: 18),
+                  ),
+                  const SizedBox(height: 4),
+                  const Text(
+                    "Per modificare l’ordine dei panchinari, tieni premuto su un giocatore e trascinalo nella posizione desiderata. In fase di calcolo l’ordine definisce la priorità d’ingresso: il primo ha precedenza sui successivi.",
+                    style: TextStyle(color: Colors.white70, fontSize: 14),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 8),
+                  SizedBox(
+                    height: 300,
+                    child: ReorderableListView(
+                      shrinkWrap: true,
+                      physics: NeverScrollableScrollPhysics(),
+                      buildDefaultDragHandles: true,
+                      padding: const EdgeInsets.all(8),
+                      children: squadVM.orderedBench.map((name) {
+                        final player = allPlayers.firstWhere((p) => p.name == name);
+                        return Container(
+                          key: ValueKey(name),
+                          margin: const EdgeInsets.symmetric(vertical: 8),
+                          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                          decoration: BoxDecoration(
+                            color: Colors.black,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: _color(player.position), width: 2),
+                          ),
+                          child: Center(
+                            child: Text(
+                              name,
+                              style: TextStyle(
+                                color: _color(player.position),
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
+                              ),
                             ),
                           ),
-                        ),
-                      );
-
-                    }).toList(),
-                    onReorder: (oldIndex, newIndex) {
-                      if (newIndex > oldIndex) newIndex -= 1;
-                      final updated = List<String>.from(squadVM.orderedBench);
-                      final moved = updated.removeAt(oldIndex);
-                      updated.insert(newIndex, moved);
-                      squadVM.updateBenchOrder(updated);
-                    },
+                        );
+                      }).toList(),
+                      onReorder: (oldIndex, newIndex) {
+                        if (newIndex > oldIndex) newIndex -= 1;
+                        final updated = List<String>.from(squadVM.orderedBench);
+                        final moved = updated.removeAt(oldIndex);
+                        updated.insert(newIndex, moved);
+                        squadVM.updateBenchOrder(updated);
+                      },
+                    ),
                   ),
-                ),
 
-                const SizedBox(height: 16),
-                ElevatedButton(
-                  onPressed: squadVM.isSquadComplete(roleCounts)
-                      ? squadVM.confirmSquad
-                      : null,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.amber,
-                    foregroundColor: Colors.black,
+                  const SizedBox(height: 16),
+                  ElevatedButton(
+                    onPressed: squadVM.isSquadComplete(roleCounts)
+                        ? squadVM.confirmSquad
+                        : null,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.amber,
+                      foregroundColor: Colors.black,
+                    ),
+                    child: const Text("Conferma Formazione"),
                   ),
-                  child: const Text("Conferma Formazione"),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         );
