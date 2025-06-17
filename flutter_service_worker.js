@@ -8,7 +8,7 @@ const RESOURCES = {"assets/AssetManifest.bin": "22487f9e47273b99893ac79e02b7fb30
 "assets/AssetManifest.json": "6ecf5f94303bbc6e60aaa406b1ad9a86",
 "assets/assets/fallback/VotiExcelUfficiali-_1_.xlsx": "c2aee62a1e766b71107b2e7b15e9fefb",
 "assets/FontManifest.json": "dc3d03800ccca4601324923c0b1d6d57",
-"assets/fonts/MaterialIcons-Regular.otf": "9ce986351db06d21ec63161d2c0bc35a",
+"assets/fonts/MaterialIcons-Regular.otf": "c4690175ab85489508990271276bf165",
 "assets/images/Draw.png": "b37274f4a91a69d82b6dfdc25c9f972a",
 "assets/images/LvW.png": "6f65bf8ba3898de885d3fb7a71dd6d15",
 "assets/images/WvL.png": "0cfaf8d4ac348ab7fff507e6f386c7f2",
@@ -28,10 +28,10 @@ const RESOURCES = {"assets/AssetManifest.bin": "22487f9e47273b99893ac79e02b7fb30
 "canvaskit/skwasm.js.symbols": "9fe690d47b904d72c7d020bd303adf16",
 "canvaskit/skwasm.wasm": "1c93738510f202d9ff44d36a4760126b",
 "flutter.js": "83d881c1dbb6d6bcd6b42e274605b69c",
-"flutter_bootstrap.js": "d0a81463b189cc1da3b5b56796103867",
-"index.html": "a75671b54f65703ec9b9684c89dffcc6",
-"/": "a75671b54f65703ec9b9684c89dffcc6",
-"main.dart.js": "8aa3574afd409d375d6e35409374c7e5",
+"flutter_bootstrap.js": "fd0130124a3c10f46a78054b7b329203",
+"index.html": "df544d68100702c9dd5976f3b1b3e820",
+"/": "df544d68100702c9dd5976f3b1b3e820",
+"main.dart.js": "84c292990fa854de520541d17dea7090",
 "version.json": "e83c8a10cbaa89c321d1dc626fa1562c"};
 // The application shell files that are downloaded before a service worker can
 // start.
