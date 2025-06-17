@@ -51,13 +51,13 @@ class FirebaseUtilStorage {
 
     await newDocRef.set(squad.toMap());
   }
-
+ /*
   Future<void> updateTeamName(String teamId, String newName) async {
     await _firestore.collection('squad').doc(teamId).update({
       'teamName': newName,
     });
   }
-
+*/
   Future<void> resetPassword() async {
     final String? email = _auth.currentUser?.email;
     if (email != null) {
@@ -352,6 +352,12 @@ class FirebaseUtilStorage {
     return players;
   }
 
-
-
+  Future<void> updateRound(int day, Round round) async {
+    try {
+      await _firestore.collection('rounds').doc(day.toString()).set(round.toMap());
+    } catch (e) {
+      print('Errore durante l\'aggiornamento del round: $e');
+      rethrow;
+    }
+  }
 }

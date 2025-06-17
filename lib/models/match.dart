@@ -7,8 +7,8 @@ class Match {
   final int gT2;
   final int sT1;
   final int sT2;
-  final List<Players> pT1;
-  final List<Players> pT2;
+  late final List<Players> pT1;
+  late final List<Players> pT2;
 
   Match(this.team1, this.team2,
       {this.gT1 = 0, this.gT2 = 0, this.pT1 = const [], this.pT2 = const [], this.sT1 = 0, this.sT2 = 0});

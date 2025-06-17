@@ -76,7 +76,7 @@ class ProfileViewModel extends ChangeNotifier {
 
     notifyListeners();
   }
-
+/*
   Future<void> updateTeamName() async {
     if (_squad == null || teamNameController.text.isEmpty) return;
 
@@ -92,7 +92,7 @@ class ProfileViewModel extends ChangeNotifier {
 
     notifyListeners();
   }
-
+*/
 
   Future<void> resetPassword(BuildContext context) async {
     await _firebaseUtil.resetPassword();

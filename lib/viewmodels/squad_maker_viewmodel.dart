@@ -72,7 +72,7 @@ class SquadMakerViewModel extends ChangeNotifier {
     return true;
   }
 
-  void confirmSquad(Round giornata, Squad squad) {
+  void confirmSquad(Round giornata, Squad squad) async {
     final orderedRoles = ['P', 'D', 'C', 'A'];
     List<Players> titolari = [];
 
@@ -83,19 +83,15 @@ class SquadMakerViewModel extends ChangeNotifier {
     List<Players> panchinari = List.from(_orderedBench);
     List<Players> formazioneFinale = [...titolari, ...panchinari];
 
-    print('--- GIORNATA SELEZIONATA ---');
-    print('Day: ${giornata.day}');
-    print('Timestamp: ${giornata.timestamp}');
-    print('Giocata: ${giornata.boolean}');
-
-    print('--- SQUAD ASSOCIATA ---');
-    print(squad.id);
-
-    print('--- FORMAZIONE COMPLETA ---');
-    for (int i = 0; i < formazioneFinale.length; i++) {
-      final tipo = i < 11 ? 'Titolare' : 'Panchinaro';
-      print('${i + 1}. [$tipo] ${formazioneFinale[i].name}');
+    if (giornata.matches.any((match) => match.team1 == squad.teamName)) {
+      final match = giornata.matches.firstWhere((match) => match.team1 == squad.teamName);
+      match.pT1 = formazioneFinale;
+    } else if (giornata.matches.any((match) => match.team2 == squad.teamName)) {
+      final match = giornata.matches.firstWhere((match) => match.team2 == squad.teamName);
+      match.pT2 = formazioneFinale;
     }
+
+    await _firebaseUtil.updateRound(giornata.day, giornata);
   }
 
 }

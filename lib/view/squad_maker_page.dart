@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../models/round.dart';
+import '../viewmodels/home_viewmodel.dart';
 import '../viewmodels/squad_maker_viewmodel.dart';
 import '../viewmodels/profile_viewmodel.dart';
 import '../models/players.dart';
@@ -135,9 +136,10 @@ class _SquadMakerPageState extends State<SquadMakerPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer2<SquadMakerViewModel, ProfileViewModel>(
-      builder: (context, squadVM, profileVM, _) {
+    return Consumer3<SquadMakerViewModel, ProfileViewModel, HomeViewModel>(
+      builder: (context, squadVM, profileVM, homeVM, _) {
         final playersMap = profileVM.loadedPlayers;
+        final isCountdownAttivo = homeVM.countdown != "In corso o già passato";
 
         if (playersMap.isEmpty) {
           return timeoutReached
@@ -336,9 +338,18 @@ class _SquadMakerPageState extends State<SquadMakerPage> {
                   ElevatedButton(
                     onPressed: squadVM.isSquadComplete(roleCounts)
                         ? () {
-                      final profileVM = context.read<ProfileViewModel>();
-                      final squad = profileVM.squad;
-                      squadVM.confirmSquad(widget.giornata, squad!);
+                      if (!isCountdownAttivo) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text("⏱️ Il tempo per confermare la formazione è scaduto."),
+                            backgroundColor: Colors.redAccent,
+                          ),
+                        );
+                      } else {
+                        final profileVM = context.read<ProfileViewModel>();
+                        final squad = profileVM.squad;
+                        squadVM.confirmSquad(widget.giornata, squad!);
+                      }
                     }
                         : null,
                     style: ElevatedButton.styleFrom(

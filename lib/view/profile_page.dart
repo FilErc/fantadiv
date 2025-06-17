@@ -55,12 +55,12 @@ class ProfilePage extends StatelessWidget {
               style: const TextStyle(color: Colors.white),
             ),
           ),
-          const SizedBox(height: 10),
-          ElevatedButton(
-            onPressed: viewModel.updateTeamName,
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.amber, foregroundColor: Colors.black),
-            child: const Text("Salva"),
-          ),
+          //const SizedBox(height: 10),
+          //ElevatedButton(
+            //onPressed: viewModel.updateTeamName,
+            //style: ElevatedButton.styleFrom(backgroundColor: Colors.amber, foregroundColor: Colors.black),
+            //child: const Text("Salva"),
+          //),
 
           const SizedBox(height: 20),
           const Text("Rosa:", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.amber)),
