@@ -81,7 +81,10 @@ class SquadMakerViewModel extends ChangeNotifier {
     }
 
     List<Players> panchinari = List.from(_orderedBench);
-    List<Players> formazioneFinale = [...titolari, ...panchinari];
+    List<String> formazioneFinale = [
+      ...titolari.map((p) => p.name),
+      ...panchinari.map((p) => p.name),
+    ];
 
     if (giornata.matches.any((match) => match.team1 == squad.teamName)) {
       final match = giornata.matches.firstWhere((match) => match.team1 == squad.teamName);

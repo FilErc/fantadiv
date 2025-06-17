@@ -91,8 +91,8 @@ class FirebaseUtilStorage {
           'gT2': match.gT2,
           'sT1': match.sT1,
           'sT2': match.sT2,
-          'pT1': match.pT1.map((p) => p.toMap()).toList(),
-          'pT2': match.pT2.map((p) => p.toMap()).toList(),
+          'pT1': match.pT1,
+          'pT2': match.pT2,
         };
       }).toList(),
       'timestamp': DateTime(2030, 3, 15, 10, 30),
@@ -116,14 +116,8 @@ class FirebaseUtilStorage {
             gT2: matchData['gT2'] ?? 0,
             sT1: matchData['sT1'] ?? 0,
             sT2: matchData['sT2'] ?? 0,
-            pT1: (matchData['pT1'] as List<dynamic>?)
-                ?.map((playerData) => Players.fromMap(playerData))
-                .toList() ??
-                [],
-            pT2: (matchData['pT2'] as List<dynamic>?)
-                ?.map((playerData) => Players.fromMap(playerData))
-                .toList() ??
-                [],
+            pT1: List<String>.from(matchData['pT1'] ?? []),
+            pT2: List<String>.from(matchData['pT2'] ?? []),
           );
         }).toList();
 
@@ -142,8 +136,8 @@ class FirebaseUtilStorage {
               'gT2': match.gT2,
               'sT1': match.sT1,
               'sT2': match.sT2,
-              'pT1': match.pT1.map((p) => p.toMap()).toList(),
-              'pT2': match.pT2.map((p) => p.toMap()).toList(),
+              'pT1': match.pT1,
+              'pT2': match.pT2,
             };
           }).toList(),
           'timestamp': DateTime(2030, 3, 15, 10, 30),
@@ -175,14 +169,8 @@ class FirebaseUtilStorage {
             gT2: matchData['gT2'] ?? 0,
             sT1: matchData['sT1'] ?? 0,
             sT2: matchData['sT2'] ?? 0,
-            pT1: (matchData['pT1'] as List<dynamic>?)
-                ?.map((playerData) => Players.fromMap(playerData))
-                .toList() ??
-                [],
-            pT2: (matchData['pT2'] as List<dynamic>?)
-                ?.map((playerData) => Players.fromMap(playerData))
-                .toList() ??
-                [],
+            pT1: List<String>.from(matchData['pT1'] ?? []),
+            pT2: List<String>.from(matchData['pT2'] ?? []),
           );
         }).toList();
         return Round(
@@ -355,6 +343,9 @@ class FirebaseUtilStorage {
   Future<void> updateRound(int day, Round round) async {
     try {
       await _firestore.collection('rounds').doc(day.toString()).set(round.toMap());
+      //INSERIRE POPUOP DI CONFERMA E ANCHE QUESTA LOGICA PER IL FUTURO, start applicazione -> round caricati se viene premuto
+      // il bottone conferma formazione e va a buon fine viene rieffettuato
+      // il loading di giornata così da averla giusta senza da andare ad effetture una chiamata quando si entra nel matchdetail
     } catch (e) {
       print('Errore durante l\'aggiornamento del round: $e');
       rethrow;

@@ -1,5 +1,3 @@
-import 'players.dart';
-
 class Match {
   final String team1;
   final String team2;
@@ -7,11 +5,19 @@ class Match {
   final int gT2;
   final int sT1;
   final int sT2;
-  late final List<Players> pT1;
-  late final List<Players> pT2;
+  late List<String> pT1;
+  late List<String> pT2;
 
-  Match(this.team1, this.team2,
-      {this.gT1 = 0, this.gT2 = 0, this.pT1 = const [], this.pT2 = const [], this.sT1 = 0, this.sT2 = 0});
+  Match(
+      this.team1,
+      this.team2, {
+        this.gT1 = 0,
+        this.gT2 = 0,
+        this.sT1 = 0,
+        this.sT2 = 0,
+        this.pT1 = const [],
+        this.pT2 = const [],
+      });
 
   factory Match.fromMap(Map<String, dynamic> map) {
     return Match(
@@ -21,14 +27,8 @@ class Match {
       gT2: map['gT2'] ?? 0,
       sT1: map['sT1'] ?? 0,
       sT2: map['sT2'] ?? 0,
-      pT1: (map['pT1'] as List<dynamic>?)
-          ?.map((e) => Players.fromMap(e))
-          .toList() ??
-          [],
-      pT2: (map['pT2'] as List<dynamic>?)
-          ?.map((e) => Players.fromMap(e))
-          .toList() ??
-          [],
+      pT1: List<String>.from(map['pT1'] ?? []),
+      pT2: List<String>.from(map['pT2'] ?? []),
     );
   }
 
@@ -40,8 +40,8 @@ class Match {
       'gT2': gT2,
       'sT1': sT1,
       'sT2': sT2,
-      'pT1': pT1.map((e) => e.toMap()).toList(),
-      'pT2': pT2.map((e) => e.toMap()).toList(),
+      'pT1': pT1,
+      'pT2': pT2,
     };
   }
 }
