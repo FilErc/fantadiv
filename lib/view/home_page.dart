@@ -183,7 +183,7 @@ class _HomeContentState extends State<HomeContent> {
                                       Navigator.push(
                                         context,
                                         MaterialPageRoute(
-                                          builder: (context) => MatchDetailsPage(match: match),
+                                          builder: (context) => MatchDetailsPage(match: match, day: round.day),
                                         ),
                                       );
                                     },

@@ -13,7 +13,6 @@ class SquadMakerPage extends StatefulWidget {
   final List<Round> lista;
   const SquadMakerPage({super.key, required this.giornata, required this.lista});
 
-
   @override
   State<SquadMakerPage> createState() => _SquadMakerPageState();
 }
@@ -23,11 +22,14 @@ class _SquadMakerPageState extends State<SquadMakerPage> {
   String selectedModule = '4-4-2';
   bool timeoutReached = false;
   late Timer _timeoutTimer;
+  bool _hasSetupFormation = false;
 
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) => _startTimeout());
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _startTimeout();
+    });
   }
 
   void _startTimeout() {
@@ -39,6 +41,71 @@ class _SquadMakerPageState extends State<SquadMakerPage> {
         });
       }
     });
+  }
+
+  void _setupInitialFormation() {
+    final profileVM = context.read<ProfileViewModel>();
+    final squadName = profileVM.squad?.teamName;
+    final currentRound = widget.giornata;
+    final allRounds = widget.lista;
+    final squadVM = context.read<SquadMakerViewModel>();
+    final playersMap = profileVM.loadedPlayers;
+
+    if (squadName == null || playersMap.isEmpty) return;
+
+    dynamic match = currentRound.matches.firstWhere(
+          (m) => m.team1 == squadName || m.team2 == squadName,
+    );
+
+    List<String>? existingFormation;
+
+    if (match != null) {
+      existingFormation = match.team1 == squadName ? match.pT1 : match.pT2;
+    }
+
+    if ((existingFormation == null || existingFormation.isEmpty) && currentRound.day != 1) {
+      final previousRound = allRounds.firstWhere(
+            (r) => r.day == currentRound.day - 1,
+        orElse: () => Round(1, []),
+      );
+
+      match = previousRound.matches.firstWhere(
+            (m) => m.team1 == squadName || m.team2 == squadName,
+      );
+
+      if (match != null) {
+        existingFormation = match.team1 == squadName ? match.pT1 : match.pT2;
+      }
+    }
+
+    if (existingFormation != null && existingFormation.isNotEmpty) {
+      final allPlayers = List<Players>.from(playersMap.values);
+      final starters = existingFormation.take(11).toList();
+      final bench = existingFormation.skip(11).toList();
+
+      final newRoleToPlayers = {
+        'P': <Players>[],
+        'D': <Players>[],
+        'C': <Players>[],
+        'A': <Players>[],
+      };
+
+      for (final name in starters) {
+        final player = allPlayers.firstWhere((p) => p.name == name, orElse: () => Players(name: '', position: '', team: '', alias: []));
+        if (player.name.isNotEmpty) {
+          newRoleToPlayers[player.position]?.add(player);
+        }
+      }
+
+      squadVM.roleToPlayers = newRoleToPlayers;
+
+      final benchPlayers = bench.map((name) =>
+          allPlayers.firstWhere((p) => p.name == name, orElse: () => Players(name: '', position: '', team: '', alias: [])))
+          .where((p) => p.name.isNotEmpty)
+          .toList();
+
+      squadVM.updateBenchOrder(benchPlayers);
+    }
   }
 
   @override
@@ -87,27 +154,16 @@ class _SquadMakerPageState extends State<SquadMakerPage> {
     }
   }
 
-  void _showPlayersByRole(
-      BuildContext context,
-      List<Players> players,
-      String role,
-      Function(Players) onPlayerSelected,
-      ) {
+  void _showPlayersByRole(BuildContext context, List<Players> players, String role, Function(Players) onPlayerSelected) {
     final selected = context.read<SquadMakerViewModel>().roleToPlayers.values.expand((e) => e).map((p) => p.name).toSet();
-
-    final filtered = players
-        .where((p) => p.position == role && !selected.contains(p.name))
-        .toList();
+    final filtered = players.where((p) => p.position == role && !selected.contains(p.name)).toList();
 
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: Colors.black,
         title: Center(
-          child: Text(
-            "Seleziona ${_roleName(role)}",
-            style: TextStyle(color: _color(role), fontWeight: FontWeight.bold),
-          ),
+          child: Text("Seleziona ${_roleName(role)}", style: TextStyle(color: _color(role), fontWeight: FontWeight.bold)),
         ),
         content: SizedBox(
           width: double.maxFinite,
@@ -141,7 +197,12 @@ class _SquadMakerPageState extends State<SquadMakerPage> {
       builder: (context, squadVM, profileVM, homeVM, _) {
         final playersMap = profileVM.loadedPlayers;
         final isCountdownAttivo = homeVM.countdown != "In corso o già passato";
-
+        if (!_hasSetupFormation && playersMap.isNotEmpty) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            _setupInitialFormation();
+          });
+          _hasSetupFormation = true;
+        }
         if (playersMap.isEmpty) {
           return timeoutReached
               ? const Scaffold(
@@ -242,10 +303,7 @@ class _SquadMakerPageState extends State<SquadMakerPage> {
                                       children: [
                                         ElevatedButton(
                                           onPressed: () {
-                                            _showPlayersByRole(
-                                              context,
-                                              allPlayers,
-                                              role,
+                                            _showPlayersByRole(context, allPlayers, role,
                                                   (selected) => squadVM.setPlayerAt(role, i, selected),
                                             );
                                           },
@@ -267,8 +325,7 @@ class _SquadMakerPageState extends State<SquadMakerPage> {
                                               child: Text(
                                                 player.name,
                                                 textAlign: TextAlign.center,
-                                                style: const TextStyle(
-                                                    color: Colors.white, fontSize: 12),
+                                                style: const TextStyle(color: Colors.white, fontSize: 12),
                                                 overflow: TextOverflow.ellipsis,
                                               ),
                                             ),
@@ -287,11 +344,7 @@ class _SquadMakerPageState extends State<SquadMakerPage> {
                     ),
                   ),
                   const SizedBox(height: 16),
-                  const Text(
-                    "Panchina",
-                    style: TextStyle(color: Colors.amber, fontSize: 18),
-                    textAlign: TextAlign.center,
-                  ),
+                  const Text("Panchina", style: TextStyle(color: Colors.amber, fontSize: 18), textAlign: TextAlign.center),
                   const SizedBox(height: 4),
                   const Text(
                     "Per modificare l’ordine dei panchinari, tieni premuto su un giocatore e trascinalo nella posizione desiderata.",
