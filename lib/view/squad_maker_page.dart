@@ -10,7 +10,8 @@ import '../widgets/football_field_painter.dart';
 
 class SquadMakerPage extends StatefulWidget {
   final Round giornata;
-  const SquadMakerPage({super.key, required this.giornata});
+  final List<Round> lista;
+  const SquadMakerPage({super.key, required this.giornata, required this.lista});
 
 
   @override
@@ -347,8 +348,24 @@ class _SquadMakerPageState extends State<SquadMakerPage> {
                         );
                       } else {
                         final profileVM = context.read<ProfileViewModel>();
+                        final homeVM = context.read<HomeViewModel>();
                         final squad = profileVM.squad;
-                        squadVM.confirmSquad(widget.giornata, squad!);
+
+                        squadVM.confirmSquad(widget.giornata, squad!).then((success) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(success
+                                  ? "✅ Formazione confermata con successo!"
+                                  : "❌ Errore durante la conferma della formazione."),
+                              backgroundColor: success ? Colors.green : Colors.redAccent,
+                              duration: const Duration(seconds: 3),
+                            ),
+                          );
+
+                          if (success) {
+                            homeVM.getCalendar();
+                          }
+                        });
                       }
                     }
                         : null,

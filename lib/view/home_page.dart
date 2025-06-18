@@ -183,7 +183,7 @@ class _HomeContentState extends State<HomeContent> {
                                       Navigator.push(
                                         context,
                                         MaterialPageRoute(
-                                          builder: (context) => MatchDetailsPage(),
+                                          builder: (context) => MatchDetailsPage(match: match),
                                         ),
                                       );
                                     },
@@ -230,6 +230,7 @@ class _HomeContentState extends State<HomeContent> {
               ElevatedButton(
                 onPressed: () {
                   final round = context.read<HomeViewModel>().firstIncompleteRound;
+                  final listOfrounds = context.read<HomeViewModel>().allRounds;
 
                   if (round != null) {
                     Navigator.push(
@@ -237,6 +238,7 @@ class _HomeContentState extends State<HomeContent> {
                       MaterialPageRoute(
                         builder: (context) => SquadMakerPage(
                           giornata: round,
+                          lista: listOfrounds,
                         ),
                       ),
                     );

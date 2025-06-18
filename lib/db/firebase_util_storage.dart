@@ -343,12 +343,6 @@ class FirebaseUtilStorage {
   Future<void> updateRound(int day, Round round) async {
     try {
       await _firestore.collection('rounds').doc(day.toString()).set(round.toMap());
-      //INSERIRE POPUOP DI CONFERMA E ANCHE QUESTA LOGICA PER IL FUTURO, start applicazione -> round caricati se viene premuto
-      // il bottone conferma formazione e va a buon fine viene rieffettuato
-      // il loading di giornata così da averla giusta senza da andare ad effetture una chiamata quando si entra nel matchdetail
-
-
-      //Indagare sul motivo per cui la barra continua  girare se non esiste il calendario creato
     } catch (e) {
       print('Errore durante l\'aggiornamento del round: $e');
       rethrow;

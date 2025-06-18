@@ -72,29 +72,34 @@ class SquadMakerViewModel extends ChangeNotifier {
     return true;
   }
 
-  void confirmSquad(Round giornata, Squad squad) async {
-    final orderedRoles = ['P', 'D', 'C', 'A'];
-    List<Players> titolari = [];
+  Future<bool> confirmSquad(Round giornata, Squad squad) async {
+    try {
+      final orderedRoles = ['P', 'D', 'C', 'A'];
+      List<Players> titolari = [];
 
-    for (var role in orderedRoles) {
-      titolari.addAll(roleToPlayers[role]!.where((p) => p.name.isNotEmpty));
+      for (var role in orderedRoles) {
+        titolari.addAll(roleToPlayers[role]!.where((p) => p.name.isNotEmpty));
+      }
+
+      List<Players> panchinari = List.from(_orderedBench);
+      List<String> formazioneFinale = [
+        ...titolari.map((p) => p.name),
+        ...panchinari.map((p) => p.name),
+      ];
+
+      if (giornata.matches.any((match) => match.team1 == squad.teamName)) {
+        final match = giornata.matches.firstWhere((match) => match.team1 == squad.teamName);
+        match.pT1 = formazioneFinale;
+      } else if (giornata.matches.any((match) => match.team2 == squad.teamName)) {
+        final match = giornata.matches.firstWhere((match) => match.team2 == squad.teamName);
+        match.pT2 = formazioneFinale;
+      }
+
+      await _firebaseUtil.updateRound(giornata.day, giornata);
+      return true;
+    } catch (e) {
+      print("Errore conferma formazione: $e");
+      return false;
     }
-
-    List<Players> panchinari = List.from(_orderedBench);
-    List<String> formazioneFinale = [
-      ...titolari.map((p) => p.name),
-      ...panchinari.map((p) => p.name),
-    ];
-
-    if (giornata.matches.any((match) => match.team1 == squad.teamName)) {
-      final match = giornata.matches.firstWhere((match) => match.team1 == squad.teamName);
-      match.pT1 = formazioneFinale;
-    } else if (giornata.matches.any((match) => match.team2 == squad.teamName)) {
-      final match = giornata.matches.firstWhere((match) => match.team2 == squad.teamName);
-      match.pT2 = formazioneFinale;
-    }
-
-    await _firebaseUtil.updateRound(giornata.day, giornata);
   }
-
 }
