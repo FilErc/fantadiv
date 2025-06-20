@@ -3,6 +3,7 @@ import 'package:fantadiv/viewmodels/file_picker_viewmodel.dart';
 import 'package:fantadiv/viewmodels/home_viewmodel.dart';
 import 'package:fantadiv/viewmodels/profile_viewmodel.dart';
 import 'package:fantadiv/viewmodels/squad_maker_viewmodel.dart';
+import 'package:fantadiv/viewmodels/time_viewmodel.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -36,6 +37,7 @@ void main() async {
         ChangeNotifierProvider(create: (_) => HomeViewModel()),
         ChangeNotifierProvider(create: (_) => ProfileViewModel()),
         ChangeNotifierProvider(create: (_) => SquadMakerViewModel()),
+        ChangeNotifierProvider(create: (_) => TimeViewModel()),
       ],
       child: const MyApp(),
     ),

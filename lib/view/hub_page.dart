@@ -1,9 +1,11 @@
+import 'package:fantadiv/view/time_view.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../viewmodels/calendar_viewmodel.dart';
 import '../viewmodels/auction_viewmodel.dart';
 import '../viewmodels/file_picker_viewmodel.dart';
 import '../viewmodels/home_viewmodel.dart';
+import '../viewmodels/time_viewmodel.dart';
 import 'auction_page.dart';
 import 'listone_view.dart';
 import 'mark_view.dart';
@@ -24,7 +26,7 @@ class _HubPageState extends State<HubPage> {
     _PageConfig(title: 'Visualizza listone', builder: (context) => const AlternativeViewWrapper()),
     _PageConfig(title: 'Importa i voti', builder: (context) => const MarksGetterViewWrapper()),
     _PageConfig(title: 'Asta del Fantacalcio', builder: (context) => const AuctionViewWrapper(),),
-
+    _PageConfig(title: 'Imposta orario', builder: (context) => const TimeViewWrapper(),),
     // Aggiungi qui nuove pagine:
     // _PageConfig(title: 'NomePagina', builder: (context) => NomeView()),
   ];
@@ -75,14 +77,13 @@ class _HubPageState extends State<HubPage> {
   }
 }
 
+
 class _PageConfig {
   final String title;
   final WidgetBuilder builder;
 
   _PageConfig({required this.title, required this.builder});
 }
-
-// Wrappers per includere i Provider
 
 class ManualViewWrapper extends StatelessWidget {
   const ManualViewWrapper({super.key});
@@ -139,6 +140,23 @@ class AuctionViewWrapper extends StatelessWidget {
     return ChangeNotifierProvider(
       create: (_) => AuctionViewModel(),
       child: const AuctionPage(),
+    );
+  }
+}
+
+class TimeViewWrapper extends StatelessWidget {
+  const TimeViewWrapper({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return ChangeNotifierProvider(
+      create: (_) => TimeViewModel(),
+      child: Consumer<TimeViewModel>(
+        builder: (context, viewModel, child) => Scaffold(
+          backgroundColor: Colors.black,
+          body: TimeView(viewModel: viewModel),
+        ),
+      ),
     );
   }
 }
