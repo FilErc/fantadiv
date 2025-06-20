@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:fantadiv/services/convertio_service.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:excel/excel.dart';
@@ -9,11 +11,8 @@ class MarkViewModel extends ChangeNotifier {
   bool isLoading = false;
   final FirebaseUtilStorage _storage = FirebaseUtilStorage();
   final FilePickerViewModel _filepicker;
-  MarkViewModel(this._filepicker);
 
-  bool _shouldPause = false;
-  void pauseLoop() => _shouldPause = true;
-  void resumeLoop() => _shouldPause = false;
+  MarkViewModel(this._filepicker);
 
   Future<void> startAutoImport({
     required int giornata,
@@ -25,6 +24,11 @@ class MarkViewModel extends ChangeNotifier {
     isLoading = false;
     notifyListeners();
   }
+
+
+  String? missingPlayerName;
+  Function(Players?)? onResolvePlayer;
+  bool isResolvingPlayer = false;
 
   Future<void> _importGiornata(
       int giornata,
@@ -52,12 +56,16 @@ class MarkViewModel extends ChangeNotifier {
           Players? player = _findPlayer(name, team);
 
           if (player == null) {
-            _shouldPause = true;
-            player = await onPlayerNotFound(name);
-            _shouldPause = false;
+            missingPlayerName = name;
+            isResolvingPlayer = true;
+            notifyListeners();
+
+            player = await _waitForPlayerSelection();
+            isResolvingPlayer = false;
+            if (player == null) continue;
           }
 
-          if (player == null) continue;
+
 
           final giornataIndex = giornata - 1;
           final lastIndex = rawValue.length - 1;
@@ -94,10 +102,6 @@ class MarkViewModel extends ChangeNotifier {
             'VC': vc,
             'VTS': vts,
           };
-
-          while (_shouldPause) {
-            await Future.delayed(const Duration(milliseconds: 100));
-          }
         }
       }
     } else {
@@ -106,6 +110,17 @@ class MarkViewModel extends ChangeNotifier {
     await Future.delayed(const Duration(milliseconds: 300));
     await _saveAllPlayersToFirestore();
   }
+
+  Future<Players?> _waitForPlayerSelection() async {
+    final completer = Completer<Players?>();
+    onResolvePlayer = (Players? selected) {
+      missingPlayerName = null;
+      notifyListeners();
+      completer.complete(selected);
+    };
+    return completer.future;
+  }
+
 
 
   Future<void> _saveAllPlayersToFirestore() async {
@@ -116,11 +131,13 @@ class MarkViewModel extends ChangeNotifier {
     final lower = name.toLowerCase();
     try {
       return allPlayers.firstWhere(
-              (p) {
-            final nameMatch = p.name.toLowerCase().contains(lower);
-            final aliasMatch = p.alias.any((alias) => alias.trim().toLowerCase().contains(lower));
-            return (nameMatch || aliasMatch);
-          },);
+            (p) {
+          final nameMatch = p.name.toLowerCase().contains(lower);
+          final aliasMatch =
+          p.alias.any((alias) => alias.trim().toLowerCase().contains(lower));
+          return (nameMatch || aliasMatch);
+        },
+      );
     } catch (_) {
       return null;
     }
@@ -147,8 +164,11 @@ class MarkViewModel extends ChangeNotifier {
         teamIndex = index + 2;
       }
 
-
-      if (token.contains('.') || token.length == 1) {
+      if (token.length == 1) {
+        break;
+      }
+      if (token.contains('.')) {
+        nameBuffer.write(token);
         break;
       }
 

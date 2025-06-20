@@ -5,6 +5,19 @@ import '../models/players.dart';
 import '../viewmodels/file_picker_viewmodel.dart';
 import '../viewmodels/match_details_viewmodel.dart';
 
+final Map<String, List<String>> statIcons = {
+  'GF': ['⚽', 'Goal'],
+  'Ass': ['🎯', 'Assist'],
+  'RigTrasf': ['🥅', 'Rigore Segnato'],
+  'RigSbagliato': ['❌', 'Rigore Sbagliato'],
+  'Esp': ['🟥', 'Espulsione'],
+  'Amm': ['🟨', 'Ammonizione'],
+  'GS': ['⛳', 'Goal Subito'],
+  'RigP': ['🥊', 'Rigore Parato'],
+  'Aut': ['🔴', 'Autogol'],
+  'RigS': ['⚽', 'Rigore Segnato'],
+};
+
 class MatchDetailsPage extends StatelessWidget {
   final Match match;
   final int day;
@@ -27,7 +40,7 @@ class MatchDetailsPage extends StatelessWidget {
             centerTitle: true,
           ),
           body: Padding(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(12),
             child: Column(
               children: [
                 Row(
@@ -51,7 +64,7 @@ class MatchDetailsPage extends StatelessWidget {
                     ),
                   ],
                 ),
-                const SizedBox(height: 20),
+                const SizedBox(height: 12),
                 Expanded(
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -66,16 +79,18 @@ class MatchDetailsPage extends StatelessWidget {
                               const SizedBox(height: 12),
                               const Center(child: Text("Titolari", style: TextStyle(color: Colors.greenAccent))),
                               const SizedBox(height: 6),
-                              ...matchVM.startersTeam1.map((player) => _buildPlayerBox(player, giornataIndex)),
+                              ...matchVM.startersTeam1.map((player) => _buildPlayerBox(player, giornataIndex, matchVM)),
                               const SizedBox(height: 12),
                               const Center(child: Text("Panchina", style: TextStyle(color: Colors.redAccent))),
                               const SizedBox(height: 6),
-                              ...matchVM.benchTeam1.map((player) => _buildPlayerBox(player, giornataIndex, isBench: true)),
+                              ...matchVM.benchTeam1.map((player) => _buildPlayerBox(player, giornataIndex, matchVM, isBench: true)),
                             ],
                           ),
                         ),
                       ),
-                      const VerticalDivider(color: Colors.white54, width: 32),
+                      const SizedBox(width: 6),
+                      Container(width: 1, color: Colors.white30),
+                      const SizedBox(width: 6),
                       Expanded(
                         child: SingleChildScrollView(
                           child: Column(
@@ -86,11 +101,11 @@ class MatchDetailsPage extends StatelessWidget {
                               const SizedBox(height: 12),
                               const Center(child: Text("Titolari", style: TextStyle(color: Colors.greenAccent))),
                               const SizedBox(height: 6),
-                              ...matchVM.startersTeam2.map((player) => _buildPlayerBox(player, giornataIndex, alignRight: true)),
+                              ...matchVM.startersTeam2.map((player) => _buildPlayerBox(player, giornataIndex, matchVM, alignRight: true)),
                               const SizedBox(height: 12),
                               const Center(child: Text("Panchina", style: TextStyle(color: Colors.redAccent))),
                               const SizedBox(height: 6),
-                              ...matchVM.benchTeam2.map((player) => _buildPlayerBox(player, giornataIndex, isBench: true, alignRight: true)),
+                              ...matchVM.benchTeam2.map((player) => _buildPlayerBox(player, giornataIndex, matchVM, isBench: true, alignRight: true)),
                             ],
                           ),
                         ),
@@ -106,7 +121,13 @@ class MatchDetailsPage extends StatelessWidget {
     );
   }
 
-  Widget _buildPlayerBox(Players player, int index, {bool isBench = false, bool alignRight = false}) {
+  Widget _buildPlayerBox(
+      Players player,
+      int index,
+      MatchDetailsViewModel matchVM, {
+        bool isBench = false,
+        bool alignRight = false,
+      }) {
     final Map<String, dynamic>? stats = (player.statsGrid != null && player.statsGrid!.length > index)
         ? player.statsGrid![index]
         : null;
@@ -114,56 +135,125 @@ class MatchDetailsPage extends StatelessWidget {
     final voteTextStyle = const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold);
     final labelStyle = const TextStyle(color: Colors.grey, fontSize: 10);
 
-    final nameWidget = Text(
+    final nameText = Text(
       player.name,
+      overflow: TextOverflow.ellipsis,
       textAlign: alignRight ? TextAlign.right : TextAlign.left,
       style: const TextStyle(color: Colors.amber, fontWeight: FontWeight.bold),
     );
 
-    // Team 1 order: VG, VC, VTS
+    final positionBadge = Container(
+      width: 24,
+      height: 24,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: _color(player.position),
+      ),
+      alignment: Alignment.center,
+      child: Text(
+        player.position,
+        style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 12),
+      ),
+    );
+
+    final emojiLine = _buildBonusEmojiLine(stats);
+
+    final nameWithBadge = Column(
+      crossAxisAlignment: alignRight ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: alignRight
+              ? [Expanded(child: nameText), const SizedBox(width: 6), positionBadge]
+              : [positionBadge, const SizedBox(width: 6), Expanded(child: nameText)],
+        ),
+        if (emojiLine.isNotEmpty)
+          Padding(
+            padding: const EdgeInsets.only(top: 4),
+            child: Text(
+              emojiLine,
+              textAlign: alignRight ? TextAlign.right : TextAlign.left,
+              style: const TextStyle(fontSize: 14),
+            ),
+          ),
+      ],
+    );
+
     final leftStatsWidgets = [
-      _buildStatColumn("VG", stats?['VG'], voteTextStyle, labelStyle),
-      const SizedBox(width: 8),
-      _buildStatColumn("VC", stats?['VC'], voteTextStyle, labelStyle),
-      const SizedBox(width: 8),
-      _buildStatColumn("VTS", stats?['VTS'], voteTextStyle, labelStyle),
+      _buildStatColumn("VG", stats?['VG'], matchVM.calculateFantaVoto(stats, stats?['VG']), voteTextStyle, labelStyle),
+      const SizedBox(width: 6),
+      _buildStatColumn("VC", stats?['VC'], matchVM.calculateFantaVoto(stats, stats?['VC']), voteTextStyle, labelStyle),
+      const SizedBox(width: 6),
+      _buildStatColumn("VTS", stats?['VTS'], matchVM.calculateFantaVoto(stats, stats?['VTS']), voteTextStyle, labelStyle),
     ];
 
-    // Team 2 order: VTS, VC, VG
     final rightStatsWidgets = [
-      _buildStatColumn("VTS", stats?['VTS'], voteTextStyle, labelStyle),
-      const SizedBox(width: 8),
-      _buildStatColumn("VC", stats?['VC'], voteTextStyle, labelStyle),
-      const SizedBox(width: 8),
-      _buildStatColumn("VG", stats?['VG'], voteTextStyle, labelStyle),
+      _buildStatColumn("VTS", stats?['VTS'], matchVM.calculateFantaVoto(stats, stats?['VTS']), voteTextStyle, labelStyle),
+      const SizedBox(width: 6),
+      _buildStatColumn("VC", stats?['VC'], matchVM.calculateFantaVoto(stats, stats?['VC']), voteTextStyle, labelStyle),
+      const SizedBox(width: 6),
+      _buildStatColumn("VG", stats?['VG'], matchVM.calculateFantaVoto(stats, stats?['VG']), voteTextStyle, labelStyle),
     ];
 
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6),
+      padding: const EdgeInsets.symmetric(vertical: 4),
       child: Container(
         width: double.infinity,
-        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
+        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 10),
         decoration: BoxDecoration(
           color: isBench ? Colors.grey[850] : Colors.grey[900],
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: alignRight
-              ? [...rightStatsWidgets, const SizedBox(width: 12), Expanded(child: Align(alignment: Alignment.centerRight, child: nameWidget))]
-              : [Expanded(child: Align(alignment: Alignment.centerLeft, child: nameWidget)), const SizedBox(width: 12), ...leftStatsWidgets],
+              ? [...rightStatsWidgets, const SizedBox(width: 6), Expanded(child: nameWithBadge)]
+              : [Expanded(child: nameWithBadge), const SizedBox(width: 6), ...leftStatsWidgets],
         ),
       ),
     );
   }
 
-  Widget _buildStatColumn(String label, dynamic value, TextStyle voteStyle, TextStyle labelStyle) {
+  String _buildBonusEmojiLine(Map<String, dynamic>? stats) {
+    if (stats == null) return '';
+
+    final buffer = StringBuffer();
+
+    statIcons.forEach((key, value) {
+      final emoji = value[0];
+      final count = (stats[key] ?? 0);
+      if (count is int && count > 0) {
+        buffer.write(emoji * count);
+      }
+    });
+
+    return buffer.toString();
+  }
+
+  Widget _buildStatColumn(String label, dynamic value, String fantavoto, TextStyle voteStyle, TextStyle labelStyle) {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
         Text(label, style: labelStyle),
-        const SizedBox(height: 4),
+        const SizedBox(height: 2),
         Text(value != null ? value.toString() : "-", style: voteStyle),
+        const SizedBox(height: 2),
+        Text(fantavoto.isNotEmpty ? fantavoto : "-", style: voteStyle),
       ],
     );
+  }
+
+  Color _color(String code) {
+    switch (code) {
+      case 'A':
+        return Colors.red;
+      case 'C':
+        return Colors.lightBlue;
+      case 'D':
+        return Colors.green;
+      case 'P':
+        return Colors.orange;
+      default:
+        return Colors.grey;
+    }
   }
 }

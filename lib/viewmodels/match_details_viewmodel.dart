@@ -22,4 +22,26 @@ class MatchDetailsViewModel extends ChangeNotifier {
     ))
         .toList();
   }
+  String calculateFantaVoto(Map<String, dynamic>? stats, dynamic value) {
+    if (stats == null || value == null) return '-';
+
+    double votoBase = value is num ? value.toDouble() : double.tryParse(value.toString()) ?? 0.0;
+    double bonus = 0.0;
+
+    bonus += (stats['GF'] ?? 0) * 3;
+    bonus += (stats['RigTrasf'] ?? 0) * 3;
+    bonus += (stats['RigS'] ?? 0) * 3;
+    bonus += (stats['Ass'] ?? 0) * 1;
+    bonus += (stats['RigP'] ?? 0) * 3;
+
+    bonus -= (stats['Aut'] ?? 0) * 3;
+    bonus -= (stats['RigSbagliato'] ?? 0) * 3;
+    bonus -= (stats['Esp'] ?? 0) * 1;
+    bonus -= (stats['GS'] ?? 0) * 1;
+    bonus -= (stats['Amm'] ?? 0) * 0.5;
+
+    double totale = votoBase + bonus;
+    return totale.toStringAsFixed(1);
+  }
+
 }

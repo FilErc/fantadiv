@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:fantadiv/viewmodels/mark_viewmodel.dart';
 import 'package:fantadiv/view/player_linking_view.dart';
 
+import '../models/players.dart';
 import '../viewmodels/file_picker_viewmodel.dart';
 import '../viewmodels/home_viewmodel.dart';
 
@@ -14,7 +15,8 @@ class MarkView extends StatelessWidget {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(
-            create: (_) => MarkViewModel(context.read<FilePickerViewModel>())),
+          create: (_) => MarkViewModel(context.read<FilePickerViewModel>()),
+        ),
         ChangeNotifierProvider.value(value: context.read<HomeViewModel>()),
       ],
       child: const _MarkView(),
@@ -30,6 +32,25 @@ class _MarkView extends StatelessWidget {
     final vm = Provider.of<MarkViewModel>(context);
     final homeVM = Provider.of<HomeViewModel>(context);
     final rounds = homeVM.allRounds;
+
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      if (vm.missingPlayerName != null &&
+          vm.onResolvePlayer != null &&
+          vm.isResolvingPlayer) {
+        vm.isResolvingPlayer = false;
+        final selected = await Navigator.push<Players>(
+          context,
+          MaterialPageRoute(
+            builder: (_) => PlayerLinkingView(
+              searchName: vm.missingPlayerName!,
+              allPlayers: vm.allPlayers,
+            ),
+          ),
+        );
+        vm.onResolvePlayer?.call(selected);
+      }
+    });
+
 
     return Scaffold(
       backgroundColor: Colors.black,
@@ -56,19 +77,7 @@ class _MarkView extends StatelessWidget {
                 onPressed: () async {
                   await vm.startAutoImport(
                     giornata: giornata,
-                    onPlayerNotFound: (name) async {
-                      if (!context.mounted) return null;
-                      final selected = await Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => PlayerLinkingView(
-                            searchName: name,
-                            allPlayers: vm.allPlayers,
-                          ),
-                        ),
-                      );
-                      return selected;
-                    },
+                    onPlayerNotFound: (_) async => null, // ora ignorato
                   );
                 },
                 child: Text(
