@@ -140,21 +140,14 @@ class ConvertioService {
     }
   }
   static leggiExcelRigaPerRiga(File file) {
-    // Legge i bytes dal file
     final bytes = file.readAsBytesSync();
-
-    // Decodifica il file Excel
     final excel = Excel.decodeBytes(bytes);
-
-    // Itera su ogni foglio del file
     for (var sheetName in excel.tables.keys) {
       final sheet = excel.tables[sheetName];
 
       print('--- Foglio: $sheetName ---');
 
-      // Itera riga per riga
       for (var row in sheet!.rows) {
-        // Costruisce una stringa leggibile con tutte le celle della riga
         final riga = row.map((cell) => cell?.value.toString() ?? '').join(' | ');
         print(riga);
       }

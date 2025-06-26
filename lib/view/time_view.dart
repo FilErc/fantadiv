@@ -9,72 +9,116 @@ class TimeView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider.value(
-      value: viewModel,
-      child: Scaffold(
-        appBar: AppBar(
-          title: const Text("Modifica Timestamp Round"),
-        ),
-        body: Consumer<TimeViewModel>(
-          builder: (context, model, _) {
-            if (model.isLoading) {
-              return const Center(child: CircularProgressIndicator());
-            }
+    final localDarkAmberTheme = ThemeData.dark().copyWith(
+      colorScheme: const ColorScheme.dark(
+        primary: Colors.amber,
+        secondary: Colors.amberAccent,
+      ),
+      appBarTheme: const AppBarTheme(
+        backgroundColor: Colors.black,
+        foregroundColor: Colors.amber,
+      ),
+      scaffoldBackgroundColor: Colors.black,
+      cardColor: Colors.grey,
+      iconTheme: const IconThemeData(color: Colors.amber),
+      snackBarTheme: const SnackBarThemeData(
+        backgroundColor: Colors.grey,
+        contentTextStyle: TextStyle(color: Colors.white),
+      ),
+      textTheme: ThemeData.dark().textTheme.apply(
+        bodyColor: Colors.white,
+        displayColor: Colors.white,
+      ),
+    );
 
-            return ListView.builder(
-              itemCount: model.rounds.length,
-              itemBuilder: (context, index) {
-                final round = model.rounds[index];
-                final timestampStr = round.timestamp != null
-                    ? round.timestamp.toString()
-                    : "Nessuna data";
+    return Theme(
+      data: localDarkAmberTheme,
+      child: ChangeNotifierProvider.value(
+        value: viewModel,
+        child: Scaffold(
+          appBar: AppBar(
+            title: const Text("Modifica Timestamp Round"),
+          ),
+          body: Consumer<TimeViewModel>(
+            builder: (context, model, _) {
+              if (model.isLoading) {
+                return const Center(child: CircularProgressIndicator());
+              }
 
-                return Card(
-                  margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                  child: ListTile(
-                    title: Text("Round Giorno ${round.day}"),
-                    subtitle: Text("Data attuale: $timestampStr"),
-                    trailing: IconButton(
-                      icon: const Icon(Icons.edit),
-                      onPressed: () async {
-                        final selectedDate = await showDatePicker(
-                          context: context,
-                          initialDate: round.timestamp ?? DateTime.now(),
-                          firstDate: DateTime(2020),
-                          lastDate: DateTime(2100),
-                        );
+              return ListView.builder(
+                itemCount: model.rounds.length,
+                itemBuilder: (context, index) {
+                  final round = model.rounds[index];
+                  final timestampStr = round.timestamp != null
+                      ? round.timestamp.toString()
+                      : "Nessuna data";
 
-                        if (selectedDate == null) return;
+                  return Card(
+                    color: Theme.of(context).cardColor,
+                    margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    child: ListTile(
+                      title: Text(
+                        "Round Giorno ${round.day}",
+                        style: const TextStyle(color: Colors.white),
+                      ),
+                      subtitle: Text(
+                        "Data attuale: $timestampStr",
+                        style: TextStyle(color: Colors.grey[300]),
+                      ),
+                      trailing: IconButton(
+                        icon: const Icon(Icons.edit),
+                        onPressed: () async {
+                          final selectedDate = await showDatePicker(
+                            context: context,
+                            initialDate: round.timestamp ?? DateTime.now(),
+                            firstDate: DateTime(2020),
+                            lastDate: DateTime(2100),
+                            builder: (context, child) {
+                              return Theme(
+                                data: localDarkAmberTheme,
+                                child: child!,
+                              );
+                            },
+                          );
 
-                        final selectedTime = await showTimePicker(
-                          context: context,
-                          initialTime: TimeOfDay.fromDateTime(
-                            round.timestamp ?? DateTime.now(),
-                          ),
-                        );
+                          if (selectedDate == null) return;
 
-                        if (selectedTime == null) return;
+                          final selectedTime = await showTimePicker(
+                            context: context,
+                            initialTime: TimeOfDay.fromDateTime(
+                              round.timestamp ?? DateTime.now(),
+                            ),
+                            builder: (context, child) {
+                              return Theme(
+                                data: localDarkAmberTheme,
+                                child: child!,
+                              );
+                            },
+                          );
 
-                        final combinedDateTime = DateTime(
-                          selectedDate.year,
-                          selectedDate.month,
-                          selectedDate.day,
-                          selectedTime.hour,
-                          selectedTime.minute,
-                        );
+                          if (selectedTime == null) return;
 
-                        await model.updateTimestamp(index, combinedDateTime);
+                          final combinedDateTime = DateTime(
+                            selectedDate.year,
+                            selectedDate.month,
+                            selectedDate.day,
+                            selectedTime.hour,
+                            selectedTime.minute,
+                          );
 
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text("Timestamp aggiornato")),
-                        );
-                      },
+                          await model.updateTimestamp(index, combinedDateTime);
+
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text("Timestamp aggiornato")),
+                          );
+                        },
+                      ),
                     ),
-                  ),
-                );
-              },
-            );
-          },
+                  );
+                },
+              );
+            },
+          ),
         ),
       ),
     );
