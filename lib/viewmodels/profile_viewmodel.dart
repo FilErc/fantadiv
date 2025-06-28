@@ -29,37 +29,39 @@ class ProfileViewModel extends ChangeNotifier {
 
   Future<void> loadUserTeam() async {
     _loading = true;
-    if (!hasListeners) return;
     notifyListeners();
 
-    bool result = await _firebaseUtil.hasTeam();
-    if (!result) {
-      _loading = false;
-      if (!hasListeners) return;
-      notifyListeners();
-      return;
-    }
+    try {
+      final has = await _firebaseUtil.hasTeam();
+      if (!has) {
+        _hasTeam = false;
+        _loading = false;
+        notifyListeners();
+        return;
+      }
 
-    Squad? squad = await _firebaseUtil.getUserTeam();
-    _hasTeam = true;
-    _squad = squad;
-    teamNameController.text = squad?.teamName ?? '';
+      final s = await _firebaseUtil.getUserTeam();
+      _squad = s;
+      _hasTeam = true;
+      teamNameController.text = s?.teamName ?? '';
 
-    if (squad?.referenceWithPrice != null && squad!.referenceWithPrice!.isNotEmpty) {
-      _isFetchingPlayers = true;
-      if (!hasListeners) return;
-      notifyListeners();
+      if (s?.referenceWithPrice != null && s!.referenceWithPrice!.isNotEmpty) {
+        _isFetchingPlayers = true;
+        notifyListeners();
 
-      final players = await _firebaseUtil.loadPlayersByRefs(squad.referenceWithPrice!.keys.toList());
-      _loadedPlayers = players;
+        final players = await _firebaseUtil.loadPlayersByRefs(s.referenceWithPrice!.keys.toList());
+        _loadedPlayers = players;
 
-      _isFetchingPlayers = false;
+        _isFetchingPlayers = false;
+      }
+    } catch (e) {
+      print("Errore in loadUserTeam: $e");
     }
 
     _loading = false;
-    if (!hasListeners) return;
     notifyListeners();
   }
+
 
 
 

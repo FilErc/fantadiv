@@ -10,7 +10,7 @@ class ProfilePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
-      create: (context) => ProfileViewModel()..loadUserTeam(),
+      create: (context) => ProfileViewModel(),
       child: Consumer<ProfileViewModel>(
         builder: (context, viewModel, child) {
           final User? user = FirebaseAuth.instance.currentUser;

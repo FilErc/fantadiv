@@ -151,7 +151,7 @@ class ListoneDisplayWrapper extends StatelessWidget {
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
       create: (_) => ListoneDisplayViewModel()..loadPlayers(),
-      child: const ListoneView(), // questa è la versione ripulita, collegata solo al display
+      child: const ListoneView(),
     );
   }
 }
