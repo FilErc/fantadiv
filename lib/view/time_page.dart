@@ -36,9 +36,6 @@ class TimeView extends StatelessWidget {
       child: ChangeNotifierProvider.value(
         value: viewModel,
         child: Scaffold(
-          appBar: AppBar(
-            title: const Text("Modifica Timestamp Round"),
-          ),
           body: Consumer<TimeViewModel>(
             builder: (context, model, _) {
               if (model.isLoading) {

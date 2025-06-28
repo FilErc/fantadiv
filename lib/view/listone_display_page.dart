@@ -1,22 +1,18 @@
 import 'package:fantadiv/view/player_detail_page.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../viewmodels/file_picker_viewmodel.dart';
 import '../../models/players.dart';
+import '../../viewmodels/listone_display_viewmodel.dart';
 
 class ListoneView extends StatelessWidget {
   const ListoneView({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final viewModel = Provider.of<FilePickerViewModel>(context);
+    final viewModel = Provider.of<ListoneDisplayViewModel>(context);
 
-    if (viewModel.isLoadingPlayers) {
-      return const Center(child: CircularProgressIndicator());
-    }
-
-    if (!viewModel.alreadyLoaded) {
-      return _buildFilePicker(viewModel);
+    if (viewModel.isLoading) {
+      return const Center(child: CircularProgressIndicator(color: Colors.amber));
     }
 
     return ChangeNotifierProvider(
@@ -32,24 +28,6 @@ class ListoneView extends StatelessWidget {
       ),
     );
   }
-
-  Widget _buildFilePicker(FilePickerViewModel viewModel) {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const Text("Seleziona un file Excel", style: TextStyle(fontSize: 24, color: Colors.amber)),
-          const SizedBox(height: 20),
-          ElevatedButton(
-            onPressed: viewModel.isLoading ? null : viewModel.pickAndProcessFile,
-            child: viewModel.isLoading
-                ? const CircularProgressIndicator()
-                : const Text("Scegli File"),
-          ),
-        ],
-      ),
-    );
-  }
 }
 
 class _FilterController extends ChangeNotifier {
@@ -59,7 +37,7 @@ class _FilterController extends ChangeNotifier {
   void toggle(String pos) async {
     isUpdating = true;
     notifyListeners();
-    await Future.delayed(const Duration(milliseconds: 1000));
+    await Future.delayed(const Duration(milliseconds: 300));
     if (selectedPositions.contains(pos)) {
       selectedPositions.remove(pos);
     } else {
@@ -82,7 +60,7 @@ class _SearchBarState extends State<_SearchBar> {
 
   @override
   Widget build(BuildContext context) {
-    final viewModel = Provider.of<FilePickerViewModel>(context, listen: false);
+    final viewModel = Provider.of<ListoneDisplayViewModel>(context, listen: false);
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -152,7 +130,7 @@ class _PositionSelector extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final viewModel = Provider.of<FilePickerViewModel>(context, listen: false);
+    final viewModel = Provider.of<ListoneDisplayViewModel>(context, listen: false);
     final controller = Provider.of<_FilterController>(context);
 
     return Wrap(
@@ -194,39 +172,31 @@ class _PositionedPlayerList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final controller = Provider.of<_FilterController>(context);
-    final viewModel = Provider.of<FilePickerViewModel>(context);
+    final viewModel = Provider.of<ListoneDisplayViewModel>(context);
 
     if (controller.isUpdating || viewModel.isSearching) {
-      return const Center(child: CircularProgressIndicator());
+      return const Center(child: CircularProgressIndicator(color: Colors.amber));
     }
 
     if (viewModel.searchResults.isNotEmpty) {
       return _buildPlayerCards(context, viewModel.searchResults);
     }
 
-    if (viewModel.searchResults.isEmpty &&
-        viewModel.searchedPlayer == null &&
-        viewModel.matchingPlayers.isEmpty &&
-        viewModel.isSearching == false &&
-        controller.selectedPositions.isEmpty) {
+    final filteredPositions = controller.selectedPositions;
+
+    final playersToShow = filteredPositions.isEmpty
+        ? viewModel.playersByPosition
+        : Map.fromEntries(viewModel.playersByPosition.entries.where(
+          (entry) => filteredPositions.contains(entry.key),
+    ));
+
+    if (playersToShow.isEmpty) {
       return const Center(
-        child: Text(
-          'Nessun risultato trovato',
-          style: TextStyle(color: Colors.white54, fontSize: 18),
-        ),
+        child: Text("Nessun giocatore trovato", style: TextStyle(color: Colors.white70)),
       );
     }
 
-    if (controller.selectedPositions.isNotEmpty) {
-      final filtered = Map.fromEntries(
-        viewModel.playersByPosition.entries.where(
-              (entry) => controller.selectedPositions.contains(entry.key),
-        ),
-      );
-      return _buildGroupedPlayers(context, filtered);
-    }
-
-    return _buildGroupedPlayers(context, viewModel.playersByPosition);
+    return _buildGroupedPlayers(context, playersToShow);
   }
 
   Widget _buildPlayerCards(BuildContext context, List<Players> players) {
@@ -238,16 +208,13 @@ class _PositionedPlayerList extends StatelessWidget {
             constraints: const BoxConstraints(maxWidth: 500),
             child: Card(
               color: color.withOpacity(0.1),
-              elevation: 2,
               child: ListTile(
                 title: Center(child: Text(p.name, style: TextStyle(color: color))),
                 subtitle: Center(child: Text(p.team, style: const TextStyle(color: Colors.white70))),
                 onTap: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(
-                      builder: (_) => PlayerDetailPage(player: p),
-                    ),
+                    MaterialPageRoute(builder: (_) => PlayerDetailPage(player: p)),
                   );
                 },
               ),
@@ -279,16 +246,13 @@ class _PositionedPlayerList extends StatelessWidget {
                 const SizedBox(height: 8),
                 ...players.map((p) => Card(
                   color: color.withOpacity(0.1),
-                  elevation: 2,
                   child: ListTile(
                     title: Center(child: Text(p.name, style: TextStyle(color: color))),
                     subtitle: Center(child: Text(p.team, style: const TextStyle(color: Colors.white70))),
                     onTap: () {
                       Navigator.push(
                         context,
-                        MaterialPageRoute(
-                          builder: (_) => PlayerDetailPage(player: p),
-                        ),
+                        MaterialPageRoute(builder: (_) => PlayerDetailPage(player: p)),
                       );
                     },
                   ),

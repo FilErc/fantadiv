@@ -1,5 +1,5 @@
 import 'package:fantadiv/viewmodels/calendar_viewmodel.dart';
-import 'package:fantadiv/viewmodels/file_picker_viewmodel.dart';
+import 'package:fantadiv/viewmodels/listone_display_viewmodel.dart';
 import 'package:fantadiv/viewmodels/home_viewmodel.dart';
 import 'package:fantadiv/viewmodels/profile_viewmodel.dart';
 import 'package:fantadiv/viewmodels/squad_maker_viewmodel.dart';
@@ -33,7 +33,7 @@ void main() async {
     MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => CalendarViewModel()),
-        ChangeNotifierProvider(create: (_) => FilePickerViewModel()),
+        ChangeNotifierProvider(create: (_) => ListoneDisplayViewModel()),
         ChangeNotifierProvider(create: (_) => HomeViewModel()),
         ChangeNotifierProvider(create: (_) => ProfileViewModel()),
         ChangeNotifierProvider(create: (_) => SquadMakerViewModel()),

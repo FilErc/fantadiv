@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../models/match.dart';
 import '../models/players.dart';
-import '../viewmodels/file_picker_viewmodel.dart';
+import '../viewmodels/listone_display_viewmodel.dart';
 import '../viewmodels/match_details_viewmodel.dart';
 
 final Map<String, List<String>> statIcons = {
@@ -26,7 +26,7 @@ class MatchDetailsPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<FilePickerViewModel>(
+    return Consumer<ListoneDisplayViewModel>(
       builder: (context, fileVM, _) {
         final allPlayers = fileVM.allPlayers;
         final giornataIndex = day - 1;

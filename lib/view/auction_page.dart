@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../viewmodels/auction_viewmodel.dart';
-import '../viewmodels/file_picker_viewmodel.dart';
 import '../viewmodels/home_viewmodel.dart';
+import '../viewmodels/listone_display_viewmodel.dart';
 
 class AuctionPage extends StatelessWidget {
   const AuctionPage({super.key});
@@ -104,7 +104,7 @@ class AuctionPageContent extends StatelessWidget {
                 child: ElevatedButton(
                   onPressed: isAdmin
                       ? () async {
-                    final filePickerVM = context.read<FilePickerViewModel>();
+                    final filePickerVM = context.read<ListoneDisplayViewModel>();
                     final players = filePickerVM.allPlayers;
                     await context.read<AuctionViewModel>().linkPlayersToSquads(players);
 

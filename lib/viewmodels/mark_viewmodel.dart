@@ -3,14 +3,14 @@ import 'dart:async';
 import 'package:fantadiv/services/convertio_service.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:excel/excel.dart';
-import 'file_picker_viewmodel.dart';
+import 'listone_display_viewmodel.dart';
 import '../db/firebase_util_storage.dart';
 import '../models/players.dart';
 
 class MarkViewModel extends ChangeNotifier {
   bool isLoading = false;
   final FirebaseUtilStorage _storage = FirebaseUtilStorage();
-  final FilePickerViewModel _filepicker;
+  final ListoneDisplayViewModel _filepicker;
 
   MarkViewModel(this._filepicker);
 

@@ -10,12 +10,6 @@ class CalendarView extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.black,
-      appBar: AppBar(
-        backgroundColor: Colors.amber,
-        foregroundColor: Colors.black,
-        title: const Text("Generatore Calendario"),
-        centerTitle: true,
-      ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(

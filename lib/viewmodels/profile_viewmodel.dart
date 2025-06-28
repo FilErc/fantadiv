@@ -29,29 +29,38 @@ class ProfileViewModel extends ChangeNotifier {
 
   Future<void> loadUserTeam() async {
     _loading = true;
+    if (!hasListeners) return;
     notifyListeners();
 
     bool result = await _firebaseUtil.hasTeam();
-    if (result) {
-      Squad? squad = await _firebaseUtil.getUserTeam();
-      _hasTeam = true;
-      _squad = squad;
-      teamNameController.text = squad?.teamName ?? '';
+    if (!result) {
+      _loading = false;
+      if (!hasListeners) return;
+      notifyListeners();
+      return;
+    }
 
-      if (squad?.referenceWithPrice != null && squad!.referenceWithPrice!.isNotEmpty) {
-        _isFetchingPlayers = true;
-        notifyListeners();
+    Squad? squad = await _firebaseUtil.getUserTeam();
+    _hasTeam = true;
+    _squad = squad;
+    teamNameController.text = squad?.teamName ?? '';
 
-        final players = await _firebaseUtil.loadPlayersByRefs(squad.referenceWithPrice!.keys.toList());
-        _loadedPlayers = players;
+    if (squad?.referenceWithPrice != null && squad!.referenceWithPrice!.isNotEmpty) {
+      _isFetchingPlayers = true;
+      if (!hasListeners) return;
+      notifyListeners();
 
-        _isFetchingPlayers = false;
-      }
+      final players = await _firebaseUtil.loadPlayersByRefs(squad.referenceWithPrice!.keys.toList());
+      _loadedPlayers = players;
+
+      _isFetchingPlayers = false;
     }
 
     _loading = false;
+    if (!hasListeners) return;
     notifyListeners();
   }
+
 
 
   Future<void> _checkUserTeam() async {

@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:fantadiv/viewmodels/mark_viewmodel.dart';
-import 'package:fantadiv/view/player_linking_view.dart';
+import 'package:fantadiv/view/player_linking_page.dart';
 
 import '../models/players.dart';
-import '../viewmodels/file_picker_viewmodel.dart';
 import '../viewmodels/home_viewmodel.dart';
+import '../viewmodels/listone_display_viewmodel.dart';
 
 class MarkView extends StatelessWidget {
   const MarkView({super.key});
@@ -15,7 +15,7 @@ class MarkView extends StatelessWidget {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(
-          create: (_) => MarkViewModel(context.read<FilePickerViewModel>()),
+          create: (_) => MarkViewModel(context.read<ListoneDisplayViewModel>()),
         ),
         ChangeNotifierProvider.value(value: context.read<HomeViewModel>()),
       ],
