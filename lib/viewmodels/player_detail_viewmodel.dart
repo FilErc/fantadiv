@@ -4,12 +4,10 @@ import '../db/firebase_util_storage.dart';
 
 class PlayerDetailViewModel extends ChangeNotifier {
   final Players player;
-
   List<Map<String, dynamic>> editableStats = [];
-
   final FirebaseUtilStorage _storage = FirebaseUtilStorage();
 
-  PlayerDetailViewModel(this.player){
+  PlayerDetailViewModel(this.player) {
     editableStats = player.statsGrid?.map((e) => Map<String, dynamic>.from(e)).toList() ?? [];
   }
 
@@ -19,7 +17,7 @@ class PlayerDetailViewModel extends ChangeNotifier {
 
     for (var entry in player.statsGrid!) {
       entry.forEach((key, value) {
-        if (['GF', 'GS', 'Aut', 'Ass', 'Amm', 'Esp', 'RigS', 'RigP', 'RigSbagliato' , 'RigTrasf'].contains(key)) {
+        if (['GF', 'GS', 'Aut', 'Ass', 'Amm', 'Esp', 'RigS', 'RigP', 'RigSbagliato', 'RigTrasf'].contains(key)) {
           final v = (value ?? 0) as int;
           totals[key] = (totals[key] ?? 0) + v;
         }
@@ -33,7 +31,7 @@ class PlayerDetailViewModel extends ChangeNotifier {
     for (var entry in player.statsGrid ?? []) {
       for (var key in ['VG', 'VC', 'VTS']) {
         if (entry[key] != null) {
-          values.add(entry[key].toDouble());
+          values.add((entry[key] as num).toDouble());
         }
       }
     }
@@ -46,8 +44,9 @@ class PlayerDetailViewModel extends ChangeNotifier {
 
   List<ChartEntry> get bonusMalusChartData {
     final list = <ChartEntry>[];
-    for (int i = 0; i < (player.statsGrid?.length ?? 0); i++) {
-      final m = player.statsGrid![i];
+    final stats = player.statsGrid ?? [];
+    for (int i = 0; i < stats.length; i++) {
+      final m = stats[i];
       list.add(ChartEntry(
         giornata: i + 1,
         gf: m['GF'] ?? 0,
@@ -60,55 +59,51 @@ class PlayerDetailViewModel extends ChangeNotifier {
 
   List<ChartEntry> get fantavotiChartData {
     final list = <ChartEntry>[];
-    for (int i = 0; i < (player.statsGrid?.length ?? 0); i++) {
-      final m = player.statsGrid![i];
-      if (m['VG'] != null || m['VC'] != null || m['VTS'] != null) {
-        list.add(ChartEntry(
-          giornata: i+1,
-          vg: (m['VG'] as num?)?.toDouble(),
-          vc: (m['VC'] as num?)?.toDouble(),
-          vts: (m['VTS'] as num?)?.toDouble(),
-        )
-        );
-      }else{
-        list.add(ChartEntry(
-          giornata: i+1,
-          vg: 0,
-          vc: 0,
-          vts: 0,
-        )
-        );
-      }
+    final stats = player.statsGrid ?? [];
+    for (int i = 0; i < stats.length; i++) {
+      final m = stats[i];
+      list.add(ChartEntry(
+        giornata: i + 1,
+        vg: (m['VG'] as num?)?.toDouble() ?? 0,
+        vc: (m['VC'] as num?)?.toDouble() ?? 0,
+        vts: (m['VTS'] as num?)?.toDouble() ?? 0,
+      ));
     }
     return list;
   }
 
   List<ChartEntryBonusMalus> get bonusMalusAggregati {
-    final List<ChartEntryBonusMalus> list = [];
+    final list = <ChartEntryBonusMalus>[];
+    final statsList = player.statsGrid;
 
-    for (int i = 0; i < player.statsGrid!.length; i++) {
-      final stats = player.statsGrid?[i];
+    if (statsList == null) return list;
+
+    for (int i = 0; i < statsList.length; i++) {
+      final stats = statsList[i];
 
       double bonus = 0;
       double malus = 0;
 
-      // Bonus
-      bonus += (stats?['GF'] ?? 0) * 3;
-      bonus += (stats?['Ass'] ?? 0) * 1;
-      bonus += (stats?['RigP'] ?? 0) * 3;
-      if (player.position == 'P' && (stats?['GS'] ?? 0) == 0) {
+      bonus += (stats['GF'] ?? 0) * 3;
+      bonus += (stats['Ass'] ?? 0) * 1;
+      bonus += (stats['RigP'] ?? 0) * 3;
+      if (player.position == 'P' && (stats['GS'] ?? 0) == 0) {
         bonus += 1;
       }
 
-      // Malus
-      malus += (stats?['Amm'] ?? 0) * 0.5;
-      malus += (stats?['Esp'] ?? 0) * 1;
-      malus += (stats?['Aut'] ?? 0) * 3;
-      malus += (stats?['RigSbagliato'] ?? 0) * 3;
+      malus += (stats['Amm'] ?? 0) * 0.5;
+      malus += (stats['Esp'] ?? 0) * 1;
+      malus += (stats['Aut'] ?? 0) * 3;
+      malus += (stats['RigSbagliato'] ?? 0) * 3;
       if (player.position == 'P') {
-        malus += (stats?['GS'] ?? 0) * 1;
+        malus += (stats['GS'] ?? 0) * 1;
       }
-      list.add(ChartEntryBonusMalus(giornata: i + 1, bonus: bonus, malus: -malus));
+
+      list.add(ChartEntryBonusMalus(
+        giornata: i + 1,
+        bonus: bonus,
+        malus: -malus,
+      ));
     }
 
     return list;
@@ -119,6 +114,7 @@ class PlayerDetailViewModel extends ChangeNotifier {
     await _storage.saveSinglePlayer(player);
   }
 }
+
 class ChartEntryBonusMalus {
   final int giornata;
   final double bonus;
@@ -141,5 +137,4 @@ class ChartEntry {
     this.vc,
     this.vts,
   });
-  
 }

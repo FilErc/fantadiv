@@ -272,6 +272,17 @@ class FirebaseUtilStorage {
     }
   }
 
+  Future<void> deletePlayer(Players player) async {
+    try {
+      final playerId = player.name.replaceAll(' ', '_').toLowerCase();
+      final docRef = _firestore.collection('players').doc(playerId);
+      await docRef.delete();
+      print("🗑️ Giocatore '${player.name}' eliminato con successo.");
+    } catch (e) {
+      print("❌ Errore durante l'eliminazione del giocatore '${player.name}': $e");
+    }
+  }
+
   Future<void> linkPlayersToSquadsWithPrices({
     required List<String?> selectedSquads,
     required List<Map<String, List<TextEditingController>>> controllers,

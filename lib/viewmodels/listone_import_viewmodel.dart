@@ -1,13 +1,14 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:excel/excel.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
 import 'dart:io' show File;
 import '../db/firebase_util_storage.dart';
 import '../models/players.dart';
+import 'listone_display_viewmodel.dart';
 
 class ListoneImportViewModel extends ChangeNotifier {
   final FirebaseUtilStorage _storage = FirebaseUtilStorage();
+  final ListoneDisplayViewModel _getterPlayer = ListoneDisplayViewModel();
 
   bool isLoading = false;
 
@@ -47,11 +48,7 @@ class ListoneImportViewModel extends ChangeNotifier {
     final excel = Excel.decodeBytes(bytes!);
     const allowedSheets = {'Attaccanti', 'Centrocampisti', 'Difensori', 'Portieri'};
 
-    final newPlayers = <Players>[];
-    final seenNames = <String>{};
-
-    final currentPlayersByPosition = await _storage.loadPlayers();
-    final currentAllPlayers = currentPlayersByPosition.values.expand((x) => x).toList();
+    List<Players> tempList = [];
 
     for (var table in excel.tables.keys) {
       if (!allowedSheets.contains(table)) continue;
@@ -69,42 +66,66 @@ class ListoneImportViewModel extends ChangeNotifier {
           return value;
         }).toList();
 
-        if (rowData.length < 5) continue;
-
+        if (rowData[0] == 'Quotazioni Fantacalcio Stagione 2024 25' || rowData[0] == 'Id') continue;
         final name = rowData[3].trim();
         final position = rowData[1].trim();
         final team = rowData[4].trim();
-        seenNames.add(name.toLowerCase());
-
-        final existing = currentAllPlayers.firstWhere(
-              (p) => p.name.toLowerCase() == name.toLowerCase(),
-          orElse: () => Players(name: name, position: position, team: team, alias: []),
-        );
-
-        final updated = Players(
-          name: existing.name,
-          position: position,
-          team: team,
-          alias: existing.alias,
-        );
-        newPlayers.add(updated);
-
+        tempList.add(Players(name: name, position: position, team: team, alias: []));
       }
     }
 
-    final toDelete = currentAllPlayers.where((p) => !seenNames.contains(p.name.toLowerCase())).toList();
+    final existingPlayers = _getterPlayer.allPlayers;
 
-    final batch = FirebaseFirestore.instance.batch();
-
-    for (final player in toDelete) {
-      final docId = player.name.replaceAll(' ', '_').toLowerCase();
-      final docRef = FirebaseFirestore.instance.collection('players').doc(docId);
-      batch.delete(docRef);
+    if (existingPlayers.isEmpty) {
+      await _storage.savePlayersInBatch(tempList);
+      return;
     }
 
-    await _storage.savePlayersInBatch(newPlayers);
-    await batch.commit();
+    final Map<String, Players> existingMap = {
+      for (var p in existingPlayers) p.name: p,
+    };
 
-    print("✅ Importazione completata. Aggiornati: ${newPlayers.length}, Rimossi: ${toDelete.length}");
+    final Set<String> processedNames = {};
+    List<Players> newPlayers = [];
+    List<Players> updatedPlayers = [];
+    List<Players> toDelete = [];
+
+    for (var player in tempList) {
+      final existing = existingMap[player.name];
+      if (existing == null) {
+        newPlayers.add(player);
+      } else {
+        processedNames.add(player.name);
+        if (player.team != existing.team || player.position != existing.position) {
+          final updated = Players(
+            name: player.name,
+            position: player.position,
+            team: player.team,
+            alias: [...existing.alias],
+          );
+          updatedPlayers.add(updated);
+        }
+      }
+    }
+
+    for (var existing in existingPlayers) {
+      if (!tempList.any((p) => p.name == existing.name)) {
+        toDelete.add(existing);
+      }
+    }
+
+    if (newPlayers.isNotEmpty) {
+      await _storage.savePlayersInBatch(newPlayers);
+    }
+
+    for (var updated in updatedPlayers) {
+      await _storage.saveSinglePlayer(updated);
+    }
+
+    for (var player in toDelete) {
+      await _storage.deletePlayer(player);
+    }
+
+    print("✅ Importazione completata.");
   }
 }
